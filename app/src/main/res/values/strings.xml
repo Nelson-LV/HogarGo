@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">HogarGo</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Inicio</string>
+    <string name="nav_tasks">Tareas</string>
+    <string name="nav_finance">Finanzas</string>
+    <string name="nav_pet">Mascota</string>
+    <string name="nav_calendar">Calendario</string>
+
+    <!-- Home -->
+    <string name="home_greeting">¡Buenos días!</string>
+    <string name="home_subtitle">Hagamos que hoy sea un día acogedor.</string>
+    <string name="home_streak_title">Energía Diaria</string>
+    <string name="home_streak_subtitle">Racha de %1$d/%2$d días</string>
+    <string name="home_zori_resting_title">Zori está descansando.</string>
+    <string name="home_zori_resting_subtitle">¡Completa tareas para despertar a Zori y ganar las recompensas de hoy!</string>
+    <string name="home_start_day">Empezar Día</string>
+    <string name="home_next_task">Siguiente Tarea</string>
+    <string name="home_savings_goal">Fondo de Vacaciones</string>
+    <string name="home_saved_amount">%1$s ahorrado</string>
+    <string name="home_goal_amount">Meta: %1$s</string>
+    <string name="home_quick_new_task">Nueva Tarea</string>
+    <string name="home_quick_add_expense">Añadir Gasto</string>
+    <string name="home_quick_event">Evento</string>
+    <string name="home_quick_more">Más</string>
+
+    <!-- Tasks -->
+    <string name="tasks_title">Tareas</string>
+    <string name="tasks_subtitle">Hagamos que el hogar brille hoy.</string>
+    <string name="tasks_streak_label">RACHA ACTUAL</string>
+    <string name="tasks_streak_value">¡%1$d Días Seguidos!</string>
+    <string name="tasks_completed_by">Completado por %1$s</string>
+    <string name="tasks_unassigned">Sin asignar</string>
+    <string name="tasks_propose_new">Proponer Nueva Misión</string>
+    <string name="tasks_minutes">%1$d mins</string>
+    <string name="tasks_due_at">Para las %1$s</string>
+
+    <string name="category_kitchen">Cocina</string>
+    <string name="category_garden">Jardín</string>
+    <string name="category_general">General</string>
+    <string name="category_cleaning">Limpieza</string>
+
+    <!-- New task -->
+    <string name="new_task_title">Nueva Tarea</string>
+    <string name="new_task_question">¿Qué hay que hacer?</string>
+    <string name="new_task_hint">Ej: Lavar los platos</string>
+    <string name="new_task_category_label">Categoría</string>
+    <string name="new_task_date_label">Fecha</string>
+    <string name="new_task_time_label">Hora</string>
+    <string name="new_task_today">Hoy</string>
+    <string name="new_task_reward_label">Recompensa para Zori</string>
+    <string name="new_task_reward_value">+%1$d Monedas Zori</string>
+    <string name="new_task_assignee_label">¿Quién lo hará?</string>
+    <string name="new_task_assignee_other">Otro</string>
+    <string name="new_task_create">Crear Misión</string>
+
+    <!-- Finance -->
+    <string name="finance_title">El Cofre Comunitario</string>
+    <string name="finance_subtitle">El latido financiero de nuestra familia.</string>
+    <string name="finance_new_expense">Nuevo Gasto</string>
+    <string name="finance_this_month">Este Mes</string>
+    <string name="finance_spent">Gastado</string>
+    <string name="finance_remaining">Restante</string>
+    <string name="finance_breakdown">Desglose de Gastos</string>
+    <string name="finance_recent_expenses">Gastos Recientes</string>
+    <string name="finance_view_all">Ver Todo</string>
+    <string name="finance_savings_progress">%1$s / %2$s</string>
+
+    <string name="expense_category_groceries">Comestibles</string>
+    <string name="expense_category_bills">Servicios y Facturas</string>
+    <string name="expense_category_pet">Cuidado de Mascota</string>
+    <string name="expense_category_leisure">Ocio y Cenas</string>
+    <string name="expense_category_services">Servicios</string>
+
+    <!-- Calendar -->
+    <string name="calendar_title">Calendario</string>
+    <string name="calendar_subtitle">Un resumen cálido de los ritmos de tu mes.</string>
+    <string name="calendar_upcoming_tasks">Próximas Tareas</string>
+    <string name="calendar_bills_due">Vencimiento de Facturas</string>
+    <string name="calendar_due_today">¡Vence Hoy!</string>
+    <string name="calendar_today">Hoy, %1$s</string>
+    <string name="calendar_tomorrow">Mañana</string>
+    <string name="calendar_month_year">%1$s %2$d</string>
+    <string name="calendar_prev_month">Mes anterior</string>
+    <string name="calendar_next_month">Mes siguiente</string>
+
+    <string-array name="days_of_week_short">
+        <item>Dom</item>
+        <item>Lun</item>
+        <item>Mar</item>
+        <item>Mié</item>
+        <item>Jue</item>
+        <item>Vie</item>
+        <item>Sáb</item>
+    </string-array>
+
+    <string-array name="months_of_year">
+        <item>Enero</item>
+        <item>Febrero</item>
+        <item>Marzo</item>
+        <item>Abril</item>
+        <item>Mayo</item>
+        <item>Junio</item>
+        <item>Julio</item>
+        <item>Agosto</item>
+        <item>Septiembre</item>
+        <item>Octubre</item>
+        <item>Noviembre</item>
+        <item>Diciembre</item>
+    </string-array>
+
+    <!-- Pet -->
+    <string name="pet_feed">Alimentar</string>
+    <string name="pet_play">Jugar</string>
+    <string name="pet_decorate">Decorar</string>
+    <string name="pet_status_title">Estado de Zori</string>
+    <string name="pet_level">Nvl %1$d</string>
+    <string name="pet_happiness">Felicidad</string>
+    <string name="pet_satiety">Saciedad</string>
+    <string name="pet_wardrobe_title">Armario</string>
+    <string name="pet_wardrobe_subtitle">¡Completa tareas familiares para desbloquear nuevos objetos para Zori!</string>
+    <string name="pet_shop">Tienda</string>
+    <string name="pet_wear">Poner</string>
+    <string name="pet_equip">Equipar</string>
+    <string name="pet_tasks_remaining">%1$d tareas restantes</string>
+    <string name="pet_need_more_title">¿Necesitas más objetos?</string>
+    <string name="pet_need_more_subtitle">Completa una tarea rápida para ganar Fichas de Mascota.</string>
+    <string name="pet_view_tasks">Ver Tareas</string>
+    <string name="pet_item_scarf">Bufanda Acogedora</string>
+    <string name="pet_item_glasses">Gafas Inteligentes</string>
+    <string name="pet_item_ball">Pelota de Juguete</string>
+    <string name="pet_item_skateboard">Mini Monopatín</string>
+
+    <!-- Sample data: family members -->
+    <string name="member_mom">Mamá</string>
+    <string name="member_dad">Papá</string>
+    <string name="member_kid">Leo</string>
+
+    <!-- Sample data: tasks -->
+    <string name="task_empty_dishwasher">Vaciar el Lavavajillas</string>
+    <string name="task_water_tomatoes">Regar los Tomates</string>
+    <string name="task_fold_laundry">Doblar la Ropa</string>
+    <string name="task_vacuum_living_room">Aspirar el Salón</string>
+    <string name="task_water_plants">Regar las Plantas</string>
+    <string name="task_wash_dishes">Lavar los platos</string>
+
+    <!-- Sample data: expenses / bills -->
+    <string name="expense_trader_joes">Trader Joe\'s</string>
+    <string name="expense_vet">Happy Paws Vet</string>
+    <string name="expense_electric">City Electric</string>
+    <string name="bill_electricity">Electricidad</string>
+    <string name="bill_internet">Internet</string>
+    <string name="date_yesterday">Ayer</string>
+    <string name="date_mon_12">Lun, 12</string>
+    <string name="date_sun_11">Dom, 11</string>
+
+    <string name="savings_goal_disneyland">Fondo para Disneyland</string>
+</resources>
