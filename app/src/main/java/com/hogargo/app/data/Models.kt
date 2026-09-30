@@ -29,6 +29,7 @@ data class HouseTask(
     val minutes: Int? = null,
     val dueTime: String? = null,
     val completed: Boolean,
+    val completedDate: String? = null,
     val assigneeId: String? = null,
     val coinReward: Int,
 )
