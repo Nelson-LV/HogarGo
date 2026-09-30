@@ -98,14 +98,18 @@
     <!-- Calendar -->
     <string name="calendar_title">Calendar</string>
     <string name="calendar_subtitle">A warm summary of your month\'s rhythm.</string>
-    <string name="calendar_upcoming_tasks">Upcoming Tasks</string>
     <string name="calendar_bills_due">Bills Due</string>
     <string name="calendar_due_today">Due Today!</string>
-    <string name="calendar_today">Today, %1$s</string>
-    <string name="calendar_tomorrow">Tomorrow</string>
     <string name="calendar_month_year">%1$s %2$d</string>
     <string name="calendar_prev_month">Previous month</string>
     <string name="calendar_next_month">Next month</string>
+    <string name="calendar_add_bill">New Bill</string>
+    <string name="calendar_bill_name_label">Name</string>
+    <string name="calendar_bill_name_hint">E.g.: Internet</string>
+    <string name="calendar_bill_due_date_label">Due date</string>
+    <string name="calendar_change_date">Change</string>
+    <string name="calendar_bills_empty">No bills yet. Tap + to add the first one.</string>
+    <string name="calendar_delete_bill_cd">Delete bill</string>
 
     <string-array name="days_of_week_short">
         <item>Sun</item>
@@ -163,11 +167,5 @@
     <string name="task_empty_dishwasher">Empty the Dishwasher</string>
     <string name="task_water_tomatoes">Water the Tomatoes</string>
     <string name="task_fold_laundry">Fold the Laundry</string>
-    <string name="task_vacuum_living_room">Vacuum the Living Room</string>
-    <string name="task_water_plants">Water the Plants</string>
     <string name="task_wash_dishes">Wash the dishes</string>
-
-    <!-- Sample data: bills -->
-    <string name="bill_electricity">Electricity</string>
-    <string name="bill_internet">Internet</string>
 </resources>

@@ -2,8 +2,6 @@ package com.hogargo.app.data
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import com.hogargo.app.R
 
 enum class TaskCategory(@StringRes val labelRes: Int) {
@@ -30,32 +28,9 @@ data class HouseTask(
     val coinReward: Int,
 )
 
-data class Bill(
-    val id: String,
-    @StringRes val nameRes: Int,
-    val amount: Double,
-    val dueToday: Boolean,
-    val dateLabel: String? = null,
-    val icon: ImageVector,
-    val iconBackground: Color,
-)
-
 data class SavingsGoal(
     @StringRes val titleRes: Int,
     val current: Int,
     val target: Int,
 )
-
-data class CalendarDayInfo(
-    val day: Int,
-    val dotColors: List<Color> = emptyList(),
-)
-
-data class UpcomingChore(
-    @StringRes val titleRes: Int,
-    val whenLabelKey: WhenLabel,
-    val done: Boolean = false,
-)
-
-enum class WhenLabel { TODAY_4PM, TOMORROW }
 

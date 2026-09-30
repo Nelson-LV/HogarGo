@@ -98,14 +98,18 @@
     <!-- Calendar -->
     <string name="calendar_title">Calendario</string>
     <string name="calendar_subtitle">Un resumen cálido de los ritmos de tu mes.</string>
-    <string name="calendar_upcoming_tasks">Próximas Tareas</string>
     <string name="calendar_bills_due">Vencimiento de Facturas</string>
     <string name="calendar_due_today">¡Vence Hoy!</string>
-    <string name="calendar_today">Hoy, %1$s</string>
-    <string name="calendar_tomorrow">Mañana</string>
     <string name="calendar_month_year">%1$s %2$d</string>
     <string name="calendar_prev_month">Mes anterior</string>
     <string name="calendar_next_month">Mes siguiente</string>
+    <string name="calendar_add_bill">Nueva Factura</string>
+    <string name="calendar_bill_name_label">Nombre</string>
+    <string name="calendar_bill_name_hint">Ej: Internet</string>
+    <string name="calendar_bill_due_date_label">Fecha de vencimiento</string>
+    <string name="calendar_change_date">Cambiar</string>
+    <string name="calendar_bills_empty">Aún no tienes facturas registradas. Toca + para añadir la primera.</string>
+    <string name="calendar_delete_bill_cd">Eliminar factura</string>
 
     <string-array name="days_of_week_short">
         <item>Dom</item>
@@ -163,11 +167,5 @@
     <string name="task_empty_dishwasher">Vaciar el Lavavajillas</string>
     <string name="task_water_tomatoes">Regar los Tomates</string>
     <string name="task_fold_laundry">Doblar la Ropa</string>
-    <string name="task_vacuum_living_room">Aspirar el Salón</string>
-    <string name="task_water_plants">Regar las Plantas</string>
     <string name="task_wash_dishes">Lavar los platos</string>
-
-    <!-- Sample data: bills -->
-    <string name="bill_electricity">Electricidad</string>
-    <string name="bill_internet">Internet</string>
 </resources>

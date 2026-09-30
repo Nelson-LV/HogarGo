@@ -24,6 +24,7 @@ import com.hogargo.app.HogarGoApplication
 import com.hogargo.app.R
 import com.hogargo.app.data.AppViewModel
 import com.hogargo.app.ui.calendar.CalendarScreen
+import com.hogargo.app.ui.calendar.CalendarViewModel
 import com.hogargo.app.ui.finance.FinanceScreen
 import com.hogargo.app.ui.finance.FinanceViewModel
 import com.hogargo.app.ui.home.HomeScreen
@@ -89,7 +90,8 @@ fun HogarGoApp(appViewModel: AppViewModel = viewModel()) {
                 PetScreen(viewModel = petViewModel)
             }
             composable(Routes.CALENDAR) {
-                CalendarScreen()
+                val calendarViewModel: CalendarViewModel = viewModel(factory = CalendarViewModel.factory(application.calendarRepository))
+                CalendarScreen(viewModel = calendarViewModel)
             }
         }
     }
