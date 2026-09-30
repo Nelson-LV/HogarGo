@@ -39,13 +39,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     init {
         viewModelScope.launch {
             if (taskDao.getTaskCount() == 0) {
-                val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-                val seededTasks = InitialTasks.map { task ->
-                    if (task.completed && task.completedDate == null) {
-                        task.copy(completedDate = todayStr)
-                    } else task
-                }
-                taskDao.insertTasks(seededTasks.map { it.toTaskEntity() })
+                taskDao.insertTasks(InitialTasks.map { it.toTaskEntity() })
             }
         }
     }
@@ -77,7 +71,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             .mapNotNull { it.completedDate }
             .sorted()
 
-        if (completedDates.isEmpty()) return 4
+        if (completedDates.isEmpty()) return 0
 
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val cal = Calendar.getInstance()
@@ -88,14 +82,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
         val lastCompletedDate = completedDates.last()
 
-        // If a full day was skipped without completing tasks (last completion was before yesterday)
         if (lastCompletedDate != todayStr && lastCompletedDate != yesterdayStr) {
             return 0
         }
 
         val uniqueCompletedDays = completedDates.toSet()
-        val baseStreak = 4
-        return baseStreak + (uniqueCompletedDays.size - 1)
+        return uniqueCompletedDays.size
     }
 
     fun triggerStreakWarningNotification() {
