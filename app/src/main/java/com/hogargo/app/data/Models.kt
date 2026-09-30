@@ -2,8 +2,10 @@ package com.hogargo.app.data
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import com.hogargo.app.R
 
 enum class TaskCategory(@StringRes val labelRes: Int) {
@@ -21,7 +23,8 @@ data class FamilyMember(
 
 data class HouseTask(
     val id: String,
-    @StringRes val titleRes: Int,
+    @StringRes val titleRes: Int? = null,
+    val titleText: String? = null,
     val category: TaskCategory,
     val minutes: Int? = null,
     val dueTime: String? = null,
@@ -29,6 +32,11 @@ data class HouseTask(
     val assigneeId: String? = null,
     val coinReward: Int,
 )
+
+@Composable
+fun HouseTask.getDisplayTitle(): String {
+    return titleRes?.let { stringResource(it) } ?: titleText ?: ""
+}
 
 data class Expense(
     val id: String,

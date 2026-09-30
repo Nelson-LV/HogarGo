@@ -39,17 +39,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import com.hogargo.app.R
 import com.hogargo.app.data.AppViewModel
 import com.hogargo.app.data.HomeSavingsGoal
-import com.hogargo.app.data.NextTask
+import com.hogargo.app.data.HouseTask
+import com.hogargo.app.data.getDisplayTitle
 
 @Composable
 fun HomeScreen(appViewModel: AppViewModel, onNewTask: () -> Unit) {
+    val uiState by appViewModel.uiState.collectAsState()
+    val completedCount = uiState.tasks.count { it.completed }
+    val totalCount = uiState.tasks.size
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -69,7 +75,7 @@ fun HomeScreen(appViewModel: AppViewModel, onNewTask: () -> Unit) {
         )
         Box(Modifier.height(16.dp))
 
-        StreakChip()
+        StreakChip(completedCount = completedCount, totalCount = totalCount)
 
         Box(Modifier.height(16.dp))
 
@@ -77,7 +83,10 @@ fun HomeScreen(appViewModel: AppViewModel, onNewTask: () -> Unit) {
 
         Box(Modifier.height(16.dp))
 
-        NextTaskCard()
+        NextTaskCard(
+            nextTask = uiState.nextTask,
+            onToggleCompleted = { taskId -> appViewModel.toggleTaskCompleted(taskId) },
+        )
 
         Box(Modifier.height(16.dp))
 
@@ -92,7 +101,7 @@ fun HomeScreen(appViewModel: AppViewModel, onNewTask: () -> Unit) {
 }
 
 @Composable
-private fun StreakChip() {
+private fun StreakChip(completedCount: Int, totalCount: Int) {
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(24.dp))
@@ -112,7 +121,7 @@ private fun StreakChip() {
                 style = MaterialTheme.typography.labelLarge,
             )
             Text(
-                text = stringResource(R.string.home_streak_subtitle, 3, 7),
+                text = stringResource(R.string.home_streak_subtitle, completedCount, totalCount),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -157,7 +166,10 @@ private fun ZoriRestingCard() {
 }
 
 @Composable
-private fun NextTaskCard() {
+private fun NextTaskCard(
+    nextTask: HouseTask?,
+    onToggleCompleted: (String) -> Unit,
+) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         shape = RoundedCornerShape(24.dp),
@@ -181,13 +193,30 @@ private fun NextTaskCard() {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Checkbox(checked = false, onCheckedChange = null)
-                Column {
-                    Text(text = stringResource(NextTask.titleRes), style = MaterialTheme.typography.titleMedium)
+                if (nextTask != null) {
+                    Checkbox(
+                        checked = nextTask.completed,
+                        onCheckedChange = { onToggleCompleted(nextTask.id) },
+                    )
+                    Column {
+                        Text(text = nextTask.getDisplayTitle(), style = MaterialTheme.typography.titleMedium)
+                        val subtitle = if (nextTask.minutes != null && nextTask.minutes > 0) {
+                            "${stringResource(nextTask.category.labelRes)} • ${stringResource(R.string.tasks_minutes, nextTask.minutes)}"
+                        } else {
+                            "${stringResource(nextTask.category.labelRes)}${nextTask.dueTime?.let { " • $it" } ?: ""}"
+                        }
+                        Text(
+                            text = subtitle,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                } else {
                     Text(
-                        text = "${stringResource(NextTask.category.labelRes)} • ${stringResource(R.string.tasks_minutes, NextTask.minutes ?: 0)}",
+                        text = stringResource(R.string.home_subtitle),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 8.dp),
                     )
                 }
             }

@@ -73,7 +73,10 @@ fun HogarGoApp(appViewModel: AppViewModel = viewModel()) {
                 )
             }
             composable(Routes.NEW_TASK) {
-                NewTaskScreen(onBack = { navController.popBackStack() })
+                NewTaskScreen(
+                    appViewModel = appViewModel,
+                    onBack = { navController.popBackStack() },
+                )
             }
             composable(Routes.FINANCE) {
                 FinanceScreen()
