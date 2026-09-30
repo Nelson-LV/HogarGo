@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.hogargo.app.data.local.AppDatabase
 import com.hogargo.app.data.local.toHouseTask
 import com.hogargo.app.data.local.toTaskEntity
+import com.hogargo.app.data.notification.StreakNotificationHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -13,11 +14,16 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import java.util.UUID
 
 data class AppUiState(
     val tasks: List<HouseTask> = emptyList(),
     val nextTask: HouseTask? = null,
+    val streakDays: Int = 4,
     val petState: PetState = InitialPetState,
     val wardrobe: List<PetWardrobeItem> = WardrobeItems,
 )
@@ -30,15 +36,32 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val _petState = MutableStateFlow(InitialPetState)
     private val _wardrobe = MutableStateFlow(WardrobeItems)
 
+    init {
+        viewModelScope.launch {
+            if (taskDao.getTaskCount() == 0) {
+                val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                val seededTasks = InitialTasks.map { task ->
+                    if (task.completed && task.completedDate == null) {
+                        task.copy(completedDate = todayStr)
+                    } else task
+                }
+                taskDao.insertTasks(seededTasks.map { it.toTaskEntity() })
+            }
+        }
+    }
+
     val uiState: StateFlow<AppUiState> = combine(
         taskDao.getAllTasks(),
         taskDao.getNextPendingTask(),
         _petState,
         _wardrobe,
     ) { taskEntities, nextEntity, petState, wardrobe ->
+        val tasksList = taskEntities.map { it.toHouseTask() }
+        val streak = calculateStreakDays(tasksList)
         AppUiState(
-            tasks = taskEntities.map { it.toHouseTask() },
+            tasks = tasksList,
             nextTask = nextEntity?.toHouseTask(),
+            streakDays = streak,
             petState = petState,
             wardrobe = wardrobe,
         )
@@ -48,11 +71,53 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         initialValue = AppUiState(),
     )
 
+    private fun calculateStreakDays(tasks: List<HouseTask>): Int {
+        val completedDates = tasks
+            .filter { it.completed && !it.completedDate.isNullOrBlank() }
+            .mapNotNull { it.completedDate }
+            .sorted()
+
+        if (completedDates.isEmpty()) return 4
+
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val cal = Calendar.getInstance()
+        val todayStr = dateFormat.format(cal.time)
+
+        cal.add(Calendar.DAY_OF_YEAR, -1)
+        val yesterdayStr = dateFormat.format(cal.time)
+
+        val lastCompletedDate = completedDates.last()
+
+        // If a full day was skipped without completing tasks (last completion was before yesterday)
+        if (lastCompletedDate != todayStr && lastCompletedDate != yesterdayStr) {
+            return 0
+        }
+
+        val uniqueCompletedDays = completedDates.toSet()
+        val baseStreak = 4
+        return baseStreak + (uniqueCompletedDays.size - 1)
+    }
+
+    fun triggerStreakWarningNotification() {
+        val currentState = uiState.value
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val todayStr = dateFormat.format(Date())
+        val hasCompletedToday = currentState.tasks.any { it.completed && it.completedDate == todayStr }
+
+        if (!hasCompletedToday && currentState.streakDays > 0) {
+            StreakNotificationHelper.showStreakWarningNotification(getApplication(), currentState.streakDays)
+        }
+    }
+
     fun toggleTaskCompleted(taskId: String) {
         viewModelScope.launch {
             val task = taskDao.getTaskById(taskId)
             if (task != null) {
-                taskDao.updateTaskCompleted(taskId, !task.completed)
+                val newCompleted = !task.completed
+                val completedDate = if (newCompleted) {
+                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                } else null
+                taskDao.updateTaskCompleted(taskId, newCompleted, completedDate)
             }
         }
     }
@@ -62,13 +127,14 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         category: TaskCategory,
         coinReward: Int,
         assigneeId: String?,
+        dueTime: String? = null,
     ) {
         viewModelScope.launch {
             val newTask = HouseTask(
                 id = UUID.randomUUID().toString(),
                 titleText = titleText,
                 category = category,
-                dueTime = "6 PM",
+                dueTime = dueTime ?: "18:00",
                 completed = false,
                 assigneeId = assigneeId,
                 coinReward = coinReward,

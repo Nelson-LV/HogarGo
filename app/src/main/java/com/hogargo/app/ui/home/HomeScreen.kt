@@ -53,9 +53,6 @@ import com.hogargo.app.data.getDisplayTitle
 @Composable
 fun HomeScreen(appViewModel: AppViewModel, onNewTask: () -> Unit) {
     val uiState by appViewModel.uiState.collectAsState()
-    val completedCount = uiState.tasks.count { it.completed }
-    val totalCount = uiState.tasks.size
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -75,7 +72,7 @@ fun HomeScreen(appViewModel: AppViewModel, onNewTask: () -> Unit) {
         )
         Box(Modifier.height(16.dp))
 
-        StreakChip(completedCount = completedCount, totalCount = totalCount)
+        StreakChip(streakDays = uiState.streakDays)
 
         Box(Modifier.height(16.dp))
 
@@ -101,7 +98,7 @@ fun HomeScreen(appViewModel: AppViewModel, onNewTask: () -> Unit) {
 }
 
 @Composable
-private fun StreakChip(completedCount: Int, totalCount: Int) {
+private fun StreakChip(streakDays: Int) {
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(24.dp))
@@ -121,7 +118,7 @@ private fun StreakChip(completedCount: Int, totalCount: Int) {
                 style = MaterialTheme.typography.labelLarge,
             )
             Text(
-                text = stringResource(R.string.home_streak_subtitle, completedCount, totalCount),
+                text = stringResource(R.string.home_streak_subtitle, streakDays, 7),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

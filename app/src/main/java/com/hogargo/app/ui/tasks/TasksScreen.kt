@@ -65,8 +65,7 @@ fun TasksScreen(appViewModel: AppViewModel, onProposeNewTask: () -> Unit) {
         )
         Box(Modifier.size(16.dp))
 
-        val completedCount = uiState.tasks.count { it.completed }
-        StreakBanner(completedCount = completedCount)
+        StreakBanner(streakDays = uiState.streakDays)
 
         Box(Modifier.size(16.dp))
 
@@ -93,7 +92,7 @@ fun TasksScreen(appViewModel: AppViewModel, onProposeNewTask: () -> Unit) {
 }
 
 @Composable
-private fun StreakBanner(completedCount: Int) {
+private fun StreakBanner(streakDays: Int) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -119,7 +118,7 @@ private fun StreakBanner(completedCount: Int) {
                 color = BrandBrownStrong,
             )
             Text(
-                text = stringResource(R.string.tasks_streak_value, completedCount),
+                text = stringResource(R.string.tasks_streak_value, streakDays),
                 style = MaterialTheme.typography.titleLarge,
                 color = BrandBrownStrong,
             )
@@ -159,9 +158,10 @@ private fun TaskCard(task: HouseTask, onToggle: () -> Unit) {
                         color = if (task.completed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                     )
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        if (task.completed && assignee != null) {
+                        val assigneeName = assignee?.let { stringResource(it.nameRes) } ?: task.assigneeId
+                        if (task.completed && assigneeName != null) {
                             Text(
-                                text = stringResource(R.string.tasks_completed_by, stringResource(assignee.nameRes)),
+                                text = stringResource(R.string.tasks_completed_by, assigneeName),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -198,6 +198,22 @@ private fun TaskCard(task: HouseTask, onToggle: () -> Unit) {
                                 .border(2.dp, MaterialTheme.colorScheme.surfaceContainerHighest, CircleShape)
                                 .alpha(if (task.completed) 0.7f else 1f),
                         )
+                    } else if (!task.assigneeId.isNullOrBlank()) {
+                        Box(Modifier.size(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer)
+                                .alpha(if (task.completed) 0.7f else 1f),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = task.assigneeId.take(1).uppercase(),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            )
+                        }
                     }
                 }
             }
