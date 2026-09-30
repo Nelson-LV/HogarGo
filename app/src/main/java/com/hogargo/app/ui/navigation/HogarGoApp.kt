@@ -85,7 +85,7 @@ fun HogarGoApp(appViewModel: AppViewModel = viewModel()) {
                 PetScreen(appViewModel = appViewModel)
             }
             composable(Routes.CALENDAR) {
-                CalendarScreen()
+                CalendarScreen(appViewModel = appViewModel)
             }
         }
     }

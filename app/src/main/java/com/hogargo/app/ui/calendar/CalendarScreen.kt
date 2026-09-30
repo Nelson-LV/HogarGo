@@ -27,6 +27,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -34,23 +35,29 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hogargo.app.R
+import com.hogargo.app.data.AppViewModel
 import com.hogargo.app.data.Bill
 import com.hogargo.app.data.CalendarDots
 import com.hogargo.app.data.CalendarMonthIndex
 import com.hogargo.app.data.CalendarSelectedDay
 import com.hogargo.app.data.CalendarYear
 import com.hogargo.app.data.UpcomingBills
-import com.hogargo.app.data.UpcomingChores
-import com.hogargo.app.data.WhenLabel
-import java.time.DayOfWeek
+import com.hogargo.app.data.local.EventEntity
 import java.time.YearMonth
 
 @Composable
-fun CalendarScreen() {
+fun CalendarScreen(appViewModel: AppViewModel = viewModel()) {
+    val uiState by appViewModel.uiState.collectAsState()
+
     var monthOffset by rememberSaveable { mutableIntStateOf(0) }
     val baseMonth = YearMonth.of(CalendarYear, CalendarMonthIndex + 1)
     val shownMonth = baseMonth.plusMonths(monthOffset.toLong())
@@ -67,14 +74,14 @@ fun CalendarScreen() {
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.fillMaxWidth(),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            textAlign = TextAlign.Center,
         )
         Text(
             stringResource(R.string.calendar_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.fillMaxWidth(),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            textAlign = TextAlign.Center,
         )
 
         Box(Modifier.size(24.dp))
@@ -86,7 +93,12 @@ fun CalendarScreen() {
         )
 
         Box(Modifier.size(20.dp))
-        UpcomingChoresCard()
+        UpcomingChoresCard(
+            events = uiState.events,
+            onToggleDone = { eventId, currentDone ->
+                appViewModel.toggleEventDone(eventId, currentDone)
+            },
+        )
 
         Box(Modifier.size(20.dp))
         BillsDueCard()
@@ -124,7 +136,7 @@ private fun MonthCard(shownMonth: YearMonth, showDots: Boolean, onPrev: () -> Un
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.weight(1f),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        textAlign = TextAlign.Center,
                     )
                 }
             }
@@ -149,7 +161,7 @@ private fun MonthCard(shownMonth: YearMonth, showDots: Boolean, onPrev: () -> Un
 }
 
 @Composable
-private fun DayCell(day: Int?, selected: Boolean, dots: List<androidx.compose.ui.graphics.Color>, modifier: Modifier = Modifier) {
+private fun DayCell(day: Int?, selected: Boolean, dots: List<Color>, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .aspectRatio(1f)
@@ -185,7 +197,10 @@ private fun DayCell(day: Int?, selected: Boolean, dots: List<androidx.compose.ui
 }
 
 @Composable
-private fun UpcomingChoresCard() {
+private fun UpcomingChoresCard(
+    events: List<EventEntity>,
+    onToggleDone: (String, Boolean) -> Unit,
+) {
     Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(Modifier.padding(24.dp)) {
             Text(
@@ -194,19 +209,32 @@ private fun UpcomingChoresCard() {
                 color = MaterialTheme.colorScheme.primary,
             )
             Box(Modifier.size(12.dp))
-            UpcomingChores.forEach { chore ->
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 6.dp)) {
-                    Checkbox(checked = chore.done, onCheckedChange = null)
-                    Column(Modifier.padding(start = 8.dp)) {
-                        Text(stringResource(chore.titleRes), style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            text = when (chore.whenLabelKey) {
-                                WhenLabel.TODAY_4PM -> stringResource(R.string.calendar_today, "4 PM")
-                                WhenLabel.TOMORROW -> stringResource(R.string.calendar_tomorrow)
-                            },
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            if (events.isEmpty()) {
+                Text(
+                    text = "No hay eventos programados",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 8.dp),
+                )
+            } else {
+                events.forEach { event ->
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 6.dp)) {
+                        Checkbox(
+                            checked = event.done,
+                            onCheckedChange = { onToggleDone(event.id, event.done) },
                         )
+                        Column(Modifier.padding(start = 8.dp)) {
+                            Text(
+                                text = event.title,
+                                style = MaterialTheme.typography.titleMedium,
+                                textDecoration = if (event.done) TextDecoration.LineThrough else null,
+                            )
+                            Text(
+                                text = event.dateLabel,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
             }
@@ -267,6 +295,6 @@ private fun BillRow(bill: Bill) {
 
 @Composable
 private fun stringArrayResource(id: Int): Array<String> {
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
     return context.resources.getStringArray(id)
 }
