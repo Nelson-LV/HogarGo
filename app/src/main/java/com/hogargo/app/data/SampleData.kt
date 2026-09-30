@@ -4,8 +4,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Checkroom
 import androidx.compose.material.icons.automirrored.outlined.DirectionsBike
-import androidx.compose.material.icons.outlined.Pets
-import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material.icons.outlined.SportsBasketball
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.Wifi
@@ -63,47 +61,6 @@ val UpcomingChores = listOf(
 )
 
 val HomeSavingsGoal = SavingsGoal(R.string.home_savings_goal, current = 650, target = 1000)
-val FinanceSavingsGoal = SavingsGoal(R.string.savings_goal_disneyland, current = 1300, target = 2000)
-
-const val MonthlySpent = 3420
-const val MonthlyRemaining = 1080
-
-val ExpenseBreakdown = listOf(
-    ExpenseCategoryShare(R.string.expense_category_groceries, 850.0, 0.45f, Color(0xFF8D4F11)),
-    ExpenseCategoryShare(R.string.expense_category_bills, 420.0, 0.25f, Color(0xFF904917)),
-    ExpenseCategoryShare(R.string.expense_category_pet, 150.0, 0.10f, Color(0xFFFEAC67)),
-    ExpenseCategoryShare(R.string.expense_category_leisure, 300.0, 0.20f, Color(0xFFFFDBC9)),
-)
-
-val RecentExpenses = listOf(
-    Expense(
-        id = "trader_joes",
-        merchantRes = R.string.expense_trader_joes,
-        categoryRes = R.string.expense_category_groceries,
-        amount = 142.50,
-        dateRes = R.string.date_yesterday,
-        icon = Icons.Outlined.ShoppingCart,
-        iconBackground = Color(0xFFFEAC67),
-    ),
-    Expense(
-        id = "vet",
-        merchantRes = R.string.expense_vet,
-        categoryRes = R.string.expense_category_pet,
-        amount = 85.00,
-        dateRes = R.string.date_mon_12,
-        icon = Icons.Outlined.Pets,
-        iconBackground = Color(0xFFFFDBC9),
-    ),
-    Expense(
-        id = "electric",
-        merchantRes = R.string.expense_electric,
-        categoryRes = R.string.expense_category_services,
-        amount = 120.00,
-        dateRes = R.string.date_sun_11,
-        icon = Icons.Outlined.Bolt,
-        iconBackground = Color(0xFFBB5808),
-    ),
-)
 
 val UpcomingBills = listOf(
     Bill(

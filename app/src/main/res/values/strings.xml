@@ -62,17 +62,38 @@
     <string name="finance_new_expense">Nuevo Gasto</string>
     <string name="finance_this_month">Este Mes</string>
     <string name="finance_spent">Gastado</string>
-    <string name="finance_remaining">Restante</string>
+    <string name="finance_average">Promedio</string>
     <string name="finance_breakdown">Desglose de Gastos</string>
     <string name="finance_recent_expenses">Gastos Recientes</string>
-    <string name="finance_view_all">Ver Todo</string>
     <string name="finance_savings_progress">%1$s / %2$s</string>
 
     <string name="expense_category_groceries">Comestibles</string>
     <string name="expense_category_bills">Servicios y Facturas</string>
     <string name="expense_category_pet">Cuidado de Mascota</string>
     <string name="expense_category_leisure">Ocio y Cenas</string>
-    <string name="expense_category_services">Servicios</string>
+
+    <!-- Finance: add expense dialog -->
+    <string name="finance_expense_name_label">Descripción</string>
+    <string name="finance_expense_name_hint">Ej: Supermercado</string>
+    <string name="finance_expense_amount_label">Monto</string>
+    <string name="finance_add_button">Agregar</string>
+    <string name="finance_cancel_button">Cancelar</string>
+    <string name="finance_delete_expense_cd">Eliminar gasto</string>
+    <string name="finance_empty_expenses">Aún no has registrado gastos. Toca \"Nuevo Gasto\" para añadir el primero.</string>
+    <string name="finance_error_empty_title">Escribe una descripción</string>
+    <string name="finance_error_invalid_amount">Ingresa un monto válido mayor a 0</string>
+
+    <!-- Finance: savings goal -->
+    <string name="finance_goal_create_title">Crear Meta de Ahorro</string>
+    <string name="finance_goal_name_label">Nombre de la meta</string>
+    <string name="finance_goal_name_hint">Ej: Vacaciones</string>
+    <string name="finance_goal_target_label">Monto objetivo</string>
+    <string name="finance_goal_create_button">Crear Meta</string>
+    <string name="finance_goal_empty_title">Aún no tienes una meta de ahorro.</string>
+    <string name="finance_goal_empty_action">Crear meta</string>
+    <string name="finance_goal_contribute_title">Aportar a la meta</string>
+    <string name="finance_goal_contribute_amount_label">Monto a aportar</string>
+    <string name="finance_goal_contribute_button">Aportar</string>
 
     <!-- Calendar -->
     <string name="calendar_title">Calendario</string>
@@ -146,15 +167,7 @@
     <string name="task_water_plants">Regar las Plantas</string>
     <string name="task_wash_dishes">Lavar los platos</string>
 
-    <!-- Sample data: expenses / bills -->
-    <string name="expense_trader_joes">Trader Joe\'s</string>
-    <string name="expense_vet">Happy Paws Vet</string>
-    <string name="expense_electric">City Electric</string>
+    <!-- Sample data: bills -->
     <string name="bill_electricity">Electricidad</string>
     <string name="bill_internet">Internet</string>
-    <string name="date_yesterday">Ayer</string>
-    <string name="date_mon_12">Lun, 12</string>
-    <string name="date_sun_11">Dom, 11</string>
-
-    <string name="savings_goal_disneyland">Fondo para Disneyland</string>
 </resources>

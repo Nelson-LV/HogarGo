@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -19,10 +20,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.hogargo.app.HogarGoApplication
 import com.hogargo.app.R
 import com.hogargo.app.data.AppViewModel
 import com.hogargo.app.ui.calendar.CalendarScreen
 import com.hogargo.app.ui.finance.FinanceScreen
+import com.hogargo.app.ui.finance.FinanceViewModel
 import com.hogargo.app.ui.home.HomeScreen
 import com.hogargo.app.ui.newtask.NewTaskScreen
 import com.hogargo.app.ui.pet.PetScreen
@@ -31,6 +34,7 @@ import com.hogargo.app.ui.tasks.TasksScreen
 @Composable
 fun HogarGoApp(appViewModel: AppViewModel = viewModel()) {
     val navController = rememberNavController()
+    val application = LocalContext.current.applicationContext as HogarGoApplication
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination
 
@@ -76,7 +80,8 @@ fun HogarGoApp(appViewModel: AppViewModel = viewModel()) {
                 NewTaskScreen(onBack = { navController.popBackStack() })
             }
             composable(Routes.FINANCE) {
-                FinanceScreen()
+                val financeViewModel: FinanceViewModel = viewModel(factory = FinanceViewModel.factory(application.financeRepository))
+                FinanceScreen(viewModel = financeViewModel)
             }
             composable(Routes.PET) {
                 PetScreen(appViewModel = appViewModel)

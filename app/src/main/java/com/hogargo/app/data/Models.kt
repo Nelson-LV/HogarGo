@@ -30,23 +30,6 @@ data class HouseTask(
     val coinReward: Int,
 )
 
-data class Expense(
-    val id: String,
-    @StringRes val merchantRes: Int,
-    @StringRes val categoryRes: Int,
-    val amount: Double,
-    @StringRes val dateRes: Int,
-    val icon: ImageVector,
-    val iconBackground: Color,
-)
-
-data class ExpenseCategoryShare(
-    @StringRes val labelRes: Int,
-    val amount: Double,
-    val fraction: Float,
-    val color: Color,
-)
-
 data class Bill(
     val id: String,
     @StringRes val nameRes: Int,
