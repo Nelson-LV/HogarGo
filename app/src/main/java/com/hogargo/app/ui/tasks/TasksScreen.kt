@@ -3,7 +3,6 @@ package com.hogargo.app.ui.tasks
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,6 +42,7 @@ import com.hogargo.app.R
 import com.hogargo.app.data.AppViewModel
 import com.hogargo.app.data.HouseTask
 import com.hogargo.app.data.familyMember
+import com.hogargo.app.data.getDisplayTitle
 import com.hogargo.app.ui.theme.BrandBrownStrong
 import com.hogargo.app.ui.theme.BrandOrange
 
@@ -65,7 +65,8 @@ fun TasksScreen(appViewModel: AppViewModel, onProposeNewTask: () -> Unit) {
         )
         Box(Modifier.size(16.dp))
 
-        StreakBanner()
+        val completedCount = uiState.tasks.count { it.completed }
+        StreakBanner(completedCount = completedCount)
 
         Box(Modifier.size(16.dp))
 
@@ -92,7 +93,7 @@ fun TasksScreen(appViewModel: AppViewModel, onProposeNewTask: () -> Unit) {
 }
 
 @Composable
-private fun StreakBanner() {
+private fun StreakBanner(completedCount: Int) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -118,7 +119,7 @@ private fun StreakBanner() {
                 color = BrandBrownStrong,
             )
             Text(
-                text = stringResource(R.string.tasks_streak_value, 4),
+                text = stringResource(R.string.tasks_streak_value, completedCount),
                 style = MaterialTheme.typography.titleLarge,
                 color = BrandBrownStrong,
             )
@@ -152,7 +153,7 @@ private fun TaskCard(task: HouseTask, onToggle: () -> Unit) {
                 Checkbox(checked = task.completed, onCheckedChange = { onToggle() })
                 Column(modifier = Modifier.weight(1f).padding(start = 4.dp)) {
                     Text(
-                        text = stringResource(task.titleRes),
+                        text = task.getDisplayTitle(),
                         style = MaterialTheme.typography.titleLarge,
                         textDecoration = if (task.completed) TextDecoration.LineThrough else null,
                         color = if (task.completed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,

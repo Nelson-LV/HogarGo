@@ -41,11 +41,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hogargo.app.R
+import com.hogargo.app.data.AppViewModel
 import com.hogargo.app.data.FamilyMembers
 import com.hogargo.app.data.TaskCategory
 
 @Composable
-fun NewTaskScreen(onBack: () -> Unit) {
+fun NewTaskScreen(appViewModel: AppViewModel, onBack: () -> Unit) {
     var title by rememberSaveable { mutableStateOf("") }
     var selectedCategory by rememberSaveable { mutableStateOf(TaskCategory.KITCHEN) }
     var reward by rememberSaveable { mutableFloatStateOf(30f) }
@@ -134,7 +135,17 @@ fun NewTaskScreen(onBack: () -> Unit) {
         Box(Modifier.size(32.dp))
 
         Button(
-            onClick = onBack,
+            onClick = {
+                if (title.isNotBlank()) {
+                    appViewModel.addNewTask(
+                        titleText = title.trim(),
+                        category = selectedCategory,
+                        coinReward = reward.toInt(),
+                        assigneeId = selectedAssignee,
+                    )
+                }
+                onBack()
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 24.dp),
