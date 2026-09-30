@@ -5,7 +5,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.hogargo.app.data.local.AppDatabase
 import com.hogargo.app.data.local.EventEntity
+import com.hogargo.app.data.local.ExpenseEntity
 import com.hogargo.app.data.local.InitialEvents
+import com.hogargo.app.data.local.InitialExpenses
 import com.hogargo.app.data.local.toHouseTask
 import com.hogargo.app.data.local.toTaskEntity
 import com.hogargo.app.data.notification.StreakNotificationHelper
@@ -27,6 +29,7 @@ data class AppUiState(
     val nextTask: HouseTask? = null,
     val streakDays: Int = 4,
     val events: List<EventEntity> = emptyList(),
+    val expenses: List<ExpenseEntity> = emptyList(),
     val petState: PetState = InitialPetState,
     val wardrobe: List<PetWardrobeItem> = WardrobeItems,
 )
@@ -36,6 +39,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val db = AppDatabase.getDatabase(application)
     private val taskDao = db.taskDao()
     private val eventDao = db.eventDao()
+    private val expenseDao = db.expenseDao()
 
     private val _petState = MutableStateFlow(InitialPetState)
     private val _wardrobe = MutableStateFlow(WardrobeItems)
@@ -48,24 +52,29 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             if (eventDao.getEventCount() == 0) {
                 eventDao.insertEvents(InitialEvents)
             }
+            if (expenseDao.getExpenseCount() == 0) {
+                expenseDao.insertExpenses(InitialExpenses)
+            }
         }
     }
 
     val uiState: StateFlow<AppUiState> = combine(
-        taskDao.getAllTasks(),
-        taskDao.getNextPendingTask(),
-        eventDao.getAllEvents(),
-        _petState,
-        _wardrobe,
-    ) { taskEntities, nextEntity, eventEntities, petState, wardrobe ->
-        val tasksList = taskEntities.map { it.toHouseTask() }
+        combine(taskDao.getAllTasks(), taskDao.getNextPendingTask(), eventDao.getAllEvents()) { tasks, next, events ->
+            Triple(tasks, next, events)
+        },
+        combine(expenseDao.getAllExpenses(), _petState, _wardrobe) { expenses, pet, wardrobe ->
+            Triple(expenses, pet, wardrobe)
+        },
+    ) { (tasks, next, events), (expenses, pet, wardrobe) ->
+        val tasksList = tasks.map { it.toHouseTask() }
         val streak = calculateStreakDays(tasksList)
         AppUiState(
             tasks = tasksList,
-            nextTask = nextEntity?.toHouseTask(),
+            nextTask = next?.toHouseTask(),
             streakDays = streak,
-            events = eventEntities,
-            petState = petState,
+            events = events,
+            expenses = expenses,
+            petState = pet,
             wardrobe = wardrobe,
         )
     }.stateIn(
@@ -87,11 +96,11 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         val todayStr = dateFormat.format(cal.time)
 
         cal.add(Calendar.DAY_OF_YEAR, -1)
-        val yesterdayStr = dateFormat.format(cal.time)
+        val resolverStr = dateFormat.format(cal.time)
 
         val lastCompletedDate = completedDates.last()
 
-        if (lastCompletedDate != todayStr && lastCompletedDate != yesterdayStr) {
+        if (lastCompletedDate != todayStr && lastCompletedDate != resolverStr) {
             return 0
         }
 
@@ -160,6 +169,19 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun toggleEventDone(eventId: String, currentDone: Boolean) {
         viewModelScope.launch {
             eventDao.updateEventDone(eventId, !currentDone)
+        }
+    }
+
+    fun addNewExpense(merchant: String, category: String, amount: Double, dateLabel: String) {
+        viewModelScope.launch {
+            val newExpense = ExpenseEntity(
+                id = UUID.randomUUID().toString(),
+                merchant = merchant,
+                category = category,
+                amount = amount,
+                dateLabel = dateLabel,
+            )
+            expenseDao.insertExpense(newExpense)
         }
     }
 
