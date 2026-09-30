@@ -3,6 +3,7 @@ package com.hogargo.app.ui.home
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
@@ -37,6 +39,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -59,6 +62,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.hogargo.app.R
 import com.hogargo.app.data.AppViewModel
@@ -74,12 +78,22 @@ import java.util.TimeZone
 fun HomeScreen(appViewModel: AppViewModel, onNewTask: () -> Unit) {
     val uiState by appViewModel.uiState.collectAsState()
     var showNewEventDialog by rememberSaveable { mutableStateOf(false) }
+    var showNewExpenseDialog by rememberSaveable { mutableStateOf(false) }
 
     if (showNewEventDialog) {
         NewEventDialog(
             onDismiss = { showNewEventDialog = false },
             onSave = { title, dateLabel, timeLabel ->
                 appViewModel.addNewEvent(title, dateLabel, timeLabel)
+            },
+        )
+    }
+
+    if (showNewExpenseDialog) {
+        NewExpenseDialog(
+            onDismiss = { showNewExpenseDialog = false },
+            onSave = { merchant, category, amount, dateLabel ->
+                appViewModel.addNewExpense(merchant, category, amount, dateLabel)
             },
         )
     }
@@ -124,11 +138,140 @@ fun HomeScreen(appViewModel: AppViewModel, onNewTask: () -> Unit) {
 
         QuickActionsGrid(
             onNewTask = onNewTask,
+            onNewExpense = { showNewExpenseDialog = true },
             onNewEvent = { showNewEventDialog = true },
         )
 
         Box(Modifier.height(24.dp))
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NewExpenseDialog(
+    onDismiss: () -> Unit,
+    onSave: (merchant: String, category: String, amount: Double, dateLabel: String) -> Unit,
+) {
+    val context = LocalContext.current
+    var merchant by rememberSaveable { mutableStateOf("") }
+    var category by rememberSaveable { mutableStateOf("Supermercado") }
+    var amountText by rememberSaveable { mutableStateOf("") }
+    var expenseDateLabel by rememberSaveable { mutableStateOf(context.getString(R.string.new_task_today)) }
+
+    var showDatePicker by rememberSaveable { mutableStateOf(false) }
+
+    val categories = listOf("Supermercado", "Servicios", "Mascota", "Ocio", "Otros")
+    val categoryScrollState = rememberScrollState()
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState()
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val cal = Calendar.getInstance().apply {
+                            timeInMillis = millis + TimeZone.getDefault().getOffset(millis)
+                        }
+                        val today = Calendar.getInstance()
+                        val isToday = (cal[Calendar.YEAR] == today[Calendar.YEAR]) && (cal[Calendar.DAY_OF_YEAR] == today[Calendar.DAY_OF_YEAR])
+                        expenseDateLabel = if (isToday) context.getString(R.string.new_task_today) else SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(cal.time)
+                    }
+                    showDatePicker = false
+                }) {
+                    Text(stringResource(android.R.string.ok))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            },
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.home_quick_add_expense), style = MaterialTheme.typography.titleLarge) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                OutlinedTextField(
+                    value = merchant,
+                    onValueChange = { merchant = it },
+                    label = { Text("Establecimiento / Comercio") },
+                    placeholder = { Text("Ej. Supermercado, Farmacia, Cine") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                )
+                OutlinedTextField(
+                    value = amountText,
+                    onValueChange = { input ->
+                        if (input.isEmpty() || input.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
+                            amountText = input
+                        }
+                    },
+                    label = { Text("Monto ($)") },
+                    placeholder = { Text("0.00") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                )
+                Text("Categoría", style = MaterialTheme.typography.labelLarge)
+                Row(
+                    modifier = Modifier.horizontalScroll(categoryScrollState),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    categories.forEach { cat ->
+                        FilterChip(
+                            selected = category == cat,
+                            onClick = { category = cat },
+                            label = { Text(cat, style = MaterialTheme.typography.labelSmall) },
+                        )
+                    }
+                }
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showDatePicker = true },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Icon(Icons.Outlined.CalendarToday, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                        Text("Fecha: $expenseDateLabel", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val amount = amountText.toDoubleOrNull() ?: 0.0
+                    if (merchant.isNotBlank() && amount > 0.0) {
+                        onSave(merchant.trim(), category, amount, expenseDateLabel)
+                        onDismiss()
+                    }
+                },
+                enabled = merchant.isNotBlank() && (amountText.toDoubleOrNull() ?: 0.0) > 0.0,
+                shape = RoundedCornerShape(12.dp),
+            ) {
+                Text(stringResource(R.string.new_task_create))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(android.R.string.cancel))
+            }
+        },
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -438,10 +581,14 @@ private fun SavingsGoalCard() {
 private data class QuickAction(val labelRes: Int, val icon: ImageVector, val enabled: Boolean)
 
 @Composable
-private fun QuickActionsGrid(onNewTask: () -> Unit, onNewEvent: () -> Unit) {
+private fun QuickActionsGrid(
+    onNewTask: () -> Unit,
+    onNewExpense: () -> Unit,
+    onNewEvent: () -> Unit,
+) {
     val actions = listOf(
         QuickAction(R.string.home_quick_new_task, Icons.Outlined.Checklist, enabled = true),
-        QuickAction(R.string.home_quick_add_expense, Icons.AutoMirrored.Outlined.ReceiptLong, enabled = false),
+        QuickAction(R.string.home_quick_add_expense, Icons.AutoMirrored.Outlined.ReceiptLong, enabled = true),
         QuickAction(R.string.home_quick_event, Icons.Outlined.CalendarMonth, enabled = true),
         QuickAction(R.string.home_quick_more, Icons.Outlined.MoreHoriz, enabled = false),
     )
@@ -461,6 +608,7 @@ private fun QuickActionsGrid(onNewTask: () -> Unit, onNewEvent: () -> Unit) {
                     .clickable(enabled = action.enabled) {
                         when (action.labelRes) {
                             R.string.home_quick_new_task -> onNewTask()
+                            R.string.home_quick_add_expense -> onNewExpense()
                             R.string.home_quick_event -> onNewEvent()
                         }
                     },

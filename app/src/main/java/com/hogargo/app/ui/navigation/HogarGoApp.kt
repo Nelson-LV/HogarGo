@@ -79,7 +79,7 @@ fun HogarGoApp(appViewModel: AppViewModel = viewModel()) {
                 )
             }
             composable(Routes.FINANCE) {
-                FinanceScreen()
+                FinanceScreen(appViewModel = appViewModel)
             }
             composable(Routes.PET) {
                 PetScreen(appViewModel = appViewModel)
