@@ -1,7 +1,9 @@
 package com.hogargo.app.ui.home
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +32,8 @@ import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.MoreHoriz
+import androidx.compose.material.icons.outlined.People
+import androidx.compose.material.icons.outlined.Pets
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -43,11 +47,13 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -59,6 +65,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -66,6 +73,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.hogargo.app.R
 import com.hogargo.app.data.AppViewModel
+import com.hogargo.app.data.FamilyMembers
 import com.hogargo.app.data.HomeSavingsGoal
 import com.hogargo.app.data.HouseTask
 import com.hogargo.app.data.getDisplayTitle
@@ -75,10 +83,14 @@ import java.util.Locale
 import java.util.TimeZone
 
 @Composable
-fun HomeScreen(appViewModel: AppViewModel, onNewTask: () -> Unit) {
+fun HomeScreen(
+    appViewModel: AppViewModel,
+    onNewTask: () -> Unit,
+) {
     val uiState by appViewModel.uiState.collectAsState()
     var showNewEventDialog by rememberSaveable { mutableStateOf(false) }
     var showNewExpenseDialog by rememberSaveable { mutableStateOf(false) }
+    var showMoreBottomSheet by rememberSaveable { mutableStateOf(false) }
 
     if (showNewEventDialog) {
         NewEventDialog(
@@ -95,6 +107,13 @@ fun HomeScreen(appViewModel: AppViewModel, onNewTask: () -> Unit) {
             onSave = { merchant, category, amount, dateLabel ->
                 appViewModel.addNewExpense(merchant, category, amount, dateLabel)
             },
+        )
+    }
+
+    if (showMoreBottomSheet) {
+        MoreBottomSheet(
+            appViewModel = appViewModel,
+            onDismiss = { showMoreBottomSheet = false },
         )
     }
 
@@ -140,10 +159,164 @@ fun HomeScreen(appViewModel: AppViewModel, onNewTask: () -> Unit) {
             onNewTask = onNewTask,
             onNewExpense = { showNewExpenseDialog = true },
             onNewEvent = { showNewEventDialog = true },
+            onMore = { showMoreBottomSheet = true },
         )
 
         Box(Modifier.height(24.dp))
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MoreBottomSheet(
+    appViewModel: AppViewModel,
+    onDismiss: () -> Unit,
+) {
+    val context = LocalContext.current
+    var showMembersDialog by rememberSaveable { mutableStateOf(false) }
+
+    if (showMembersDialog) {
+        HouseholdMembersDialog(onDismiss = { showMembersDialog = false })
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.home_quick_more),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Box(Modifier.height(4.dp))
+
+            MoreOptionRow(
+                icon = Icons.Outlined.Pets,
+                title = "Alimentar Mascota (Zori)",
+                subtitle = "Dale de comer a Zori para aumentar su saciedad",
+                onClick = {
+                    appViewModel.feedPet()
+                    Toast.makeText(context, "🍎 ¡Has alimentado a Zori!", Toast.LENGTH_SHORT).show()
+                    onDismiss()
+                },
+            )
+
+            MoreOptionRow(
+                icon = Icons.Outlined.People,
+                title = "Integrantes del Hogar",
+                subtitle = "Ver los miembros registrados de la familia",
+                onClick = {
+                    showMembersDialog = true
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun MoreOptionRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(22.dp),
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = title, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HouseholdMembersDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Outlined.People, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Text("Integrantes del Hogar", style = MaterialTheme.typography.titleLarge)
+            }
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(
+                    text = "Miembros registrados en la familia:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                ) {
+                    FamilyMembers.forEach { member ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Image(
+                                painter = painterResource(member.avatarRes),
+                                contentDescription = stringResource(member.nameRes),
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(CircleShape)
+                                    .border(2.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape),
+                            )
+                            Text(
+                                text = stringResource(member.nameRes),
+                                style = MaterialTheme.typography.labelMedium,
+                                modifier = Modifier.padding(top = 6.dp),
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(android.R.string.ok))
+            }
+        },
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -578,19 +751,21 @@ private fun SavingsGoalCard() {
     }
 }
 
-private data class QuickAction(val labelRes: Int, val icon: ImageVector, val enabled: Boolean)
+private enum class QuickActionType { NEW_TASK, ADD_EXPENSE, EVENT, MORE }
+private data class QuickAction(val type: QuickActionType, val label: String, val icon: ImageVector)
 
 @Composable
 private fun QuickActionsGrid(
     onNewTask: () -> Unit,
     onNewExpense: () -> Unit,
     onNewEvent: () -> Unit,
+    onMore: () -> Unit,
 ) {
     val actions = listOf(
-        QuickAction(R.string.home_quick_new_task, Icons.Outlined.Checklist, enabled = true),
-        QuickAction(R.string.home_quick_add_expense, Icons.AutoMirrored.Outlined.ReceiptLong, enabled = true),
-        QuickAction(R.string.home_quick_event, Icons.Outlined.CalendarMonth, enabled = true),
-        QuickAction(R.string.home_quick_more, Icons.Outlined.MoreHoriz, enabled = false),
+        QuickAction(QuickActionType.NEW_TASK, stringResource(R.string.home_quick_new_task), Icons.Outlined.Checklist),
+        QuickAction(QuickActionType.ADD_EXPENSE, stringResource(R.string.home_quick_add_expense), Icons.AutoMirrored.Outlined.ReceiptLong),
+        QuickAction(QuickActionType.EVENT, stringResource(R.string.home_quick_event), Icons.Outlined.CalendarMonth),
+        QuickAction(QuickActionType.MORE, stringResource(R.string.home_quick_more), Icons.Outlined.MoreHoriz),
     )
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -605,11 +780,12 @@ private fun QuickActionsGrid(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
                 modifier = Modifier
                     .aspectRatio(1.6f)
-                    .clickable(enabled = action.enabled) {
-                        when (action.labelRes) {
-                            R.string.home_quick_new_task -> onNewTask()
-                            R.string.home_quick_add_expense -> onNewExpense()
-                            R.string.home_quick_event -> onNewEvent()
+                    .clickable {
+                        when (action.type) {
+                            QuickActionType.NEW_TASK -> onNewTask()
+                            QuickActionType.ADD_EXPENSE -> onNewExpense()
+                            QuickActionType.EVENT -> onNewEvent()
+                            QuickActionType.MORE -> onMore()
                         }
                     },
             ) {
@@ -628,7 +804,7 @@ private fun QuickActionsGrid(
                         Icon(action.icon, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
                     }
                     Text(
-                        text = stringResource(action.labelRes),
+                        text = action.label,
                         style = MaterialTheme.typography.labelLarge,
                         modifier = Modifier.padding(top = 8.dp),
                     )
