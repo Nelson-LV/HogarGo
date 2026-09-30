@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.hogargo.app.data.local.AppDatabase
+import com.hogargo.app.data.local.EventEntity
+import com.hogargo.app.data.local.InitialEvents
 import com.hogargo.app.data.local.toHouseTask
 import com.hogargo.app.data.local.toTaskEntity
 import com.hogargo.app.data.notification.StreakNotificationHelper
@@ -24,6 +26,7 @@ data class AppUiState(
     val tasks: List<HouseTask> = emptyList(),
     val nextTask: HouseTask? = null,
     val streakDays: Int = 4,
+    val events: List<EventEntity> = emptyList(),
     val petState: PetState = InitialPetState,
     val wardrobe: List<PetWardrobeItem> = WardrobeItems,
 )
@@ -32,6 +35,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = AppDatabase.getDatabase(application)
     private val taskDao = db.taskDao()
+    private val eventDao = db.eventDao()
 
     private val _petState = MutableStateFlow(InitialPetState)
     private val _wardrobe = MutableStateFlow(WardrobeItems)
@@ -41,21 +45,26 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             if (taskDao.getTaskCount() == 0) {
                 taskDao.insertTasks(InitialTasks.map { it.toTaskEntity() })
             }
+            if (eventDao.getEventCount() == 0) {
+                eventDao.insertEvents(InitialEvents)
+            }
         }
     }
 
     val uiState: StateFlow<AppUiState> = combine(
         taskDao.getAllTasks(),
         taskDao.getNextPendingTask(),
+        eventDao.getAllEvents(),
         _petState,
         _wardrobe,
-    ) { taskEntities, nextEntity, petState, wardrobe ->
+    ) { taskEntities, nextEntity, eventEntities, petState, wardrobe ->
         val tasksList = taskEntities.map { it.toHouseTask() }
         val streak = calculateStreakDays(tasksList)
         AppUiState(
             tasks = tasksList,
             nextTask = nextEntity?.toHouseTask(),
             streakDays = streak,
+            events = eventEntities,
             petState = petState,
             wardrobe = wardrobe,
         )
@@ -132,6 +141,25 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 coinReward = coinReward,
             )
             taskDao.insertTask(newTask.toTaskEntity())
+        }
+    }
+
+    fun addNewEvent(title: String, dateLabel: String, timeLabel: String? = null) {
+        viewModelScope.launch {
+            val formattedDate = if (!timeLabel.isNullOrBlank()) "$dateLabel • $timeLabel" else dateLabel
+            val newEvent = EventEntity(
+                id = UUID.randomUUID().toString(),
+                title = title,
+                dateLabel = formattedDate,
+                done = false,
+            )
+            eventDao.insertEvent(newEvent)
+        }
+    }
+
+    fun toggleEventDone(eventId: String, currentDone: Boolean) {
+        viewModelScope.launch {
+            eventDao.updateEventDone(eventId, !currentDone)
         }
     }
 
