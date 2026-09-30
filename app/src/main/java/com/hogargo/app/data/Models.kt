@@ -59,17 +59,3 @@ data class UpcomingChore(
 
 enum class WhenLabel { TODAY_4PM, TOMORROW }
 
-data class PetWardrobeItem(
-    val id: String,
-    @StringRes val nameRes: Int,
-    val icon: ImageVector,
-    val unlocked: Boolean,
-    val equipped: Boolean = false,
-    val tasksRemaining: Int? = null,
-)
-
-data class PetState(
-    val level: Int,
-    val happiness: Float,
-    val satiety: Float,
-)

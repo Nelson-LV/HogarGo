@@ -29,6 +29,7 @@ import com.hogargo.app.ui.finance.FinanceViewModel
 import com.hogargo.app.ui.home.HomeScreen
 import com.hogargo.app.ui.newtask.NewTaskScreen
 import com.hogargo.app.ui.pet.PetScreen
+import com.hogargo.app.ui.pet.PetViewModel
 import com.hogargo.app.ui.tasks.TasksScreen
 
 @Composable
@@ -84,7 +85,8 @@ fun HogarGoApp(appViewModel: AppViewModel = viewModel()) {
                 FinanceScreen(viewModel = financeViewModel)
             }
             composable(Routes.PET) {
-                PetScreen(appViewModel = appViewModel)
+                val petViewModel: PetViewModel = viewModel(factory = PetViewModel.factory(application.petRepository))
+                PetScreen(viewModel = petViewModel)
             }
             composable(Routes.CALENDAR) {
                 CalendarScreen()

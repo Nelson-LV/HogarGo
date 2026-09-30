@@ -12,14 +12,21 @@ import androidx.room.TypeConverters
  * (and only this file) to see merge conflicts when multiple features land at once.
  */
 @Database(
-    entities = [ExpenseEntity::class, SavingsGoalEntity::class],
-    version = 1,
+    entities = [
+        ExpenseEntity::class,
+        SavingsGoalEntity::class,
+        PetStateEntity::class,
+        WardrobeItemEntity::class,
+    ],
+    version = 2,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
 abstract class HogarGoDatabase : RoomDatabase() {
     abstract fun expenseDao(): ExpenseDao
     abstract fun savingsGoalDao(): SavingsGoalDao
+    abstract fun petStateDao(): PetStateDao
+    abstract fun wardrobeItemDao(): WardrobeItemDao
 
     companion object {
         @Volatile
@@ -31,7 +38,10 @@ abstract class HogarGoDatabase : RoomDatabase() {
                     context.applicationContext,
                     HogarGoDatabase::class.java,
                     "hogargo.db",
-                ).build().also { instance = it }
+                )
+                    // Pre-release schema: destroy & recreate on bump instead of writing migrations.
+                    .fallbackToDestructiveMigration(dropAllTables = true)
+                    .build().also { instance = it }
             }
     }
 }

@@ -2,10 +2,6 @@ package com.hogargo.app.data
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bolt
-import androidx.compose.material.icons.outlined.Checkroom
-import androidx.compose.material.icons.automirrored.outlined.DirectionsBike
-import androidx.compose.material.icons.outlined.SportsBasketball
-import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.ui.graphics.Color
 import com.hogargo.app.R
@@ -95,12 +91,3 @@ val CalendarDots = listOf(
 const val CalendarSelectedDay = 15
 const val CalendarYear = 2023
 const val CalendarMonthIndex = 9 // October, 0-based
-
-val InitialPetState = PetState(level = 12, happiness = 0.85f, satiety = 0.60f)
-
-val WardrobeItems = listOf(
-    PetWardrobeItem("scarf", R.string.pet_item_scarf, Icons.Outlined.Checkroom, unlocked = true),
-    PetWardrobeItem("glasses", R.string.pet_item_glasses, Icons.Outlined.Visibility, unlocked = false, tasksRemaining = 3),
-    PetWardrobeItem("ball", R.string.pet_item_ball, Icons.Outlined.SportsBasketball, unlocked = true),
-    PetWardrobeItem("skateboard", R.string.pet_item_skateboard, Icons.AutoMirrored.Outlined.DirectionsBike, unlocked = false, tasksRemaining = 10),
-)

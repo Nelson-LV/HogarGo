@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,16 +40,22 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.hogargo.app.R
-import com.hogargo.app.data.AppViewModel
-import com.hogargo.app.data.PetWardrobeItem
+import com.hogargo.app.data.local.PetStateEntity
+import com.hogargo.app.data.local.WardrobeItemEntity
+import com.hogargo.app.data.pet.WardrobeCatalog
+import com.hogargo.app.data.pet.WardrobeCatalogItem
 import com.hogargo.app.ui.theme.BrandOrange
 import com.hogargo.app.ui.theme.BrandOrangeDeep
 
 @Composable
-fun PetScreen(appViewModel: AppViewModel) {
-    val uiState by appViewModel.uiState.collectAsState()
+fun PetScreen(viewModel: PetViewModel) {
+    val uiState by viewModel.uiState.collectAsState()
+    val feedCooldownMs by viewModel.feedCooldownMs.collectAsState()
+    val playCooldownMs by viewModel.playCooldownMs.collectAsState()
+    val petState = uiState.petState
 
     Column(
         modifier = Modifier
@@ -58,23 +65,28 @@ fun PetScreen(appViewModel: AppViewModel) {
     ) {
         Box(Modifier.size(16.dp))
 
-        PetStageCard(onFeed = appViewModel::feedPet, onPlay = appViewModel::playWithPet)
+        PetStageCard(
+            feedCooldownMs = feedCooldownMs,
+            playCooldownMs = playCooldownMs,
+            onFeed = viewModel::feed,
+            onPlay = viewModel::play,
+        )
 
         Box(Modifier.size(16.dp))
-        PetStatsCard(happiness = uiState.petState.happiness, satiety = uiState.petState.satiety, level = uiState.petState.level)
+        PetStatsCard(petState)
 
         Box(Modifier.size(16.dp))
-        WardrobeCard(items = uiState.wardrobe, onToggle = appViewModel::toggleWardrobeEquipped)
+        WardrobeCard(level = petState?.level ?: 1, equippedItems = uiState.wardrobe, onToggle = viewModel::toggleEquip)
 
         Box(Modifier.size(16.dp))
-        NeedMoreItemsCard()
+        TipCard()
 
         Box(Modifier.size(24.dp))
     }
 }
 
 @Composable
-private fun PetStageCard(onFeed: () -> Unit, onPlay: () -> Unit) {
+private fun PetStageCard(feedCooldownMs: Long, playCooldownMs: Long, onFeed: () -> Unit, onPlay: () -> Unit) {
     Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {
         Column(
             modifier = Modifier
@@ -99,12 +111,26 @@ private fun PetStageCard(onFeed: () -> Unit, onPlay: () -> Unit) {
                     Text(stringResource(R.string.pet_decorate))
                 }
             }
+            val feedMinutes = (feedCooldownMs / 60_000L + 1).coerceAtLeast(1)
+            val playMinutes = (playCooldownMs / 60_000L + 1).coerceAtLeast(1)
+            if (feedCooldownMs > 0 || playCooldownMs > 0) {
+                Box(Modifier.size(8.dp))
+                Text(
+                    text = when {
+                        feedCooldownMs > 0 && playCooldownMs > 0 -> stringResource(R.string.pet_cooldown_available_in, maxOf(feedMinutes, playMinutes))
+                        feedCooldownMs > 0 -> stringResource(R.string.pet_feed) + ": " + stringResource(R.string.pet_cooldown_available_in, feedMinutes)
+                        else -> stringResource(R.string.pet_play) + ": " + stringResource(R.string.pet_cooldown_available_in, playMinutes)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun PetStatsCard(happiness: Float, satiety: Float, level: Int) {
+private fun PetStatsCard(petState: PetStateEntity?) {
     Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(Modifier.padding(24.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -115,13 +141,13 @@ private fun PetStatsCard(happiness: Float, satiety: Float, level: Int) {
                         .background(BrandOrangeDeep)
                         .padding(horizontal = 12.dp, vertical = 4.dp),
                 ) {
-                    Text(stringResource(R.string.pet_level, level), color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(R.string.pet_level, petState?.level ?: 1), color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.labelLarge)
                 }
             }
             Box(Modifier.size(16.dp))
-            StatBar(stringResource(R.string.pet_happiness), happiness, BrandOrange)
+            StatBar(stringResource(R.string.pet_happiness), petState?.happiness ?: 0.5f, BrandOrange)
             Box(Modifier.size(12.dp))
-            StatBar(stringResource(R.string.pet_satiety), satiety, BrandOrangeDeep)
+            StatBar(stringResource(R.string.pet_satiety), petState?.satiety ?: 0.5f, BrandOrangeDeep)
         }
     }
 }
@@ -147,7 +173,7 @@ private fun StatBar(label: String, value: Float, color: androidx.compose.ui.grap
 }
 
 @Composable
-private fun WardrobeCard(items: List<PetWardrobeItem>, onToggle: (String) -> Unit) {
+private fun WardrobeCard(level: Int, equippedItems: List<WardrobeItemEntity>, onToggle: (String) -> Unit) {
     Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(Modifier.padding(24.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -166,21 +192,25 @@ private fun WardrobeCard(items: List<PetWardrobeItem>, onToggle: (String) -> Uni
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.height(380.dp),
             ) {
-                items(items) { item -> WardrobeItemCard(item = item, onToggle = { onToggle(item.id) }) }
+                items(WardrobeCatalog) { catalogItem ->
+                    val equipped = equippedItems.find { it.id == catalogItem.id }?.equipped ?: false
+                    val unlocked = level >= catalogItem.unlockLevel
+                    WardrobeItemCard(item = catalogItem, unlocked = unlocked, equipped = equipped, onToggle = { onToggle(catalogItem.id) })
+                }
             }
         }
     }
 }
 
 @Composable
-private fun WardrobeItemCard(item: PetWardrobeItem, onToggle: () -> Unit) {
+private fun WardrobeItemCard(item: WardrobeCatalogItem, unlocked: Boolean, equipped: Boolean, onToggle: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(if (item.unlocked) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainer)
+            .background(if (unlocked) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainer)
             .border(
-                width = if (item.unlocked) 0.dp else 1.dp,
+                width = if (unlocked) 0.dp else 1.dp,
                 color = MaterialTheme.colorScheme.outlineVariant,
                 shape = RoundedCornerShape(16.dp),
             )
@@ -192,10 +222,10 @@ private fun WardrobeItemCard(item: PetWardrobeItem, onToggle: () -> Unit) {
                 .size(48.dp)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surface)
-                .alpha(if (item.unlocked) 1f else 0.6f),
+                .alpha(if (unlocked) 1f else 0.6f),
             contentAlignment = Alignment.Center,
         ) {
-            if (item.unlocked) {
+            if (unlocked) {
                 Icon(item.icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             } else {
                 Icon(Icons.Outlined.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -204,25 +234,25 @@ private fun WardrobeItemCard(item: PetWardrobeItem, onToggle: () -> Unit) {
         Text(
             text = stringResource(item.nameRes),
             style = MaterialTheme.typography.bodyLarge,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 8.dp),
         )
         Box(Modifier.size(8.dp))
-        if (item.unlocked) {
+        if (unlocked) {
             Button(
                 onClick = onToggle,
                 colors = ButtonDefaults.buttonColors(containerColor = BrandOrange, contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
                 shape = RoundedCornerShape(50),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 4.dp, horizontal = 12.dp),
+                contentPadding = PaddingValues(vertical = 4.dp, horizontal = 12.dp),
             ) {
                 Text(
-                    text = stringResource(if (item.equipped) R.string.pet_equip else R.string.pet_wear),
+                    text = stringResource(if (equipped) R.string.pet_equip else R.string.pet_wear),
                     style = MaterialTheme.typography.labelMedium,
                 )
             }
         } else {
             Text(
-                text = stringResource(R.string.pet_tasks_remaining, item.tasksRemaining ?: 0),
+                text = stringResource(R.string.pet_level_required, item.unlockLevel),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -231,24 +261,15 @@ private fun WardrobeItemCard(item: PetWardrobeItem, onToggle: () -> Unit) {
 }
 
 @Composable
-private fun NeedMoreItemsCard() {
+private fun TipCard() {
     Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = BrandOrangeDeep)) {
         Column(Modifier.padding(24.dp)) {
-            Text(stringResource(R.string.pet_need_more_title), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimary)
+            Text(stringResource(R.string.pet_tip_title), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimary)
             Text(
-                stringResource(R.string.pet_need_more_subtitle),
+                stringResource(R.string.pet_tip_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
-                modifier = Modifier.padding(top = 4.dp, bottom = 16.dp),
             )
-            Button(
-                onClick = { },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface, contentColor = BrandOrangeDeep),
-                shape = RoundedCornerShape(50),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(R.string.pet_view_tasks))
-            }
         }
     }
 }
