@@ -83,6 +83,7 @@ import com.hogargo.app.data.local.ExpenseCategory
 import com.hogargo.app.ui.calendar.CalendarViewModel
 import com.hogargo.app.ui.finance.FinanceViewModel
 import com.hogargo.app.ui.pet.PetViewModel
+import com.hogargo.app.ui.pet.ZoriAvatar
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -119,6 +120,7 @@ fun HomeScreen(
 
     val uiState by appViewModel.uiState.collectAsState()
     val financeState by financeViewModel.uiState.collectAsState()
+    val petState by petViewModel.uiState.collectAsState()
     var showNewEventDialog by rememberSaveable { mutableStateOf(false) }
     var showNewExpenseDialog by rememberSaveable { mutableStateOf(false) }
     var showMoreBottomSheet by rememberSaveable { mutableStateOf(false) }
@@ -178,7 +180,7 @@ fun HomeScreen(
 
         Box(Modifier.height(16.dp))
 
-        ZoriRestingCard(onClick = onOpenPet)
+        ZoriRestingCard(equippedIds = petState.wardrobe.filter { it.equipped }.map { it.id }.toSet(), onClick = onOpenPet)
 
         Box(Modifier.height(16.dp))
 
@@ -647,7 +649,7 @@ private fun StreakChip(streakDays: Int) {
 }
 
 @Composable
-private fun ZoriRestingCard(onClick: () -> Unit) {
+private fun ZoriRestingCard(equippedIds: Set<String>, onClick: () -> Unit) {
     Card(
         onClick = onClick,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
@@ -674,11 +676,7 @@ private fun ZoriRestingCard(onClick: () -> Unit) {
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
-            Image(
-                painter = painterResource(R.drawable.img_zori_fox),
-                contentDescription = null,
-                modifier = Modifier.size(96.dp),
-            )
+            ZoriAvatar(equippedIds = equippedIds, size = 110.dp)
         }
     }
 }

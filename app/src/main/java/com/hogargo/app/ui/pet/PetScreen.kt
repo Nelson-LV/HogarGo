@@ -1,6 +1,5 @@
 package com.hogargo.app.ui.pet
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -42,7 +41,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -116,11 +114,7 @@ private fun PetStageCard(
                 .padding(vertical = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Image(
-                painter = painterResource(R.drawable.img_zori_fox),
-                contentDescription = null,
-                modifier = Modifier.size(160.dp),
-            )
+            ZoriAvatar(equippedIds = equippedItems.map { it.id }.toSet(), size = 200.dp)
             Box(Modifier.size(8.dp))
             Text(
                 text = if (equippedItems.isEmpty()) {
