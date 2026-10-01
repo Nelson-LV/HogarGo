@@ -1,25 +1,26 @@
 package com.hogargo.app.ui.pet
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -33,22 +34,34 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.hogargo.app.R
-import com.hogargo.app.data.AppViewModel
-import com.hogargo.app.data.PetWardrobeItem
+import com.hogargo.app.data.local.PetStateEntity
+import com.hogargo.app.data.pet.WardrobeCatalog
+import com.hogargo.app.data.pet.WardrobeCatalogItem
 import com.hogargo.app.ui.theme.BrandOrange
 import com.hogargo.app.ui.theme.BrandOrangeDeep
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun PetScreen(appViewModel: AppViewModel) {
-    val uiState by appViewModel.uiState.collectAsState()
+fun PetScreen(viewModel: PetViewModel) {
+    val uiState by viewModel.uiState.collectAsState()
+    val feedCooldownMs by viewModel.feedCooldownMs.collectAsState()
+    val playCooldownMs by viewModel.playCooldownMs.collectAsState()
+    val petState = uiState.petState
+    val wardrobeRequester = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
+    val equippedIds = uiState.wardrobe.filter { it.equipped }.map { it.id }.toSet()
+    val equippedItems = WardrobeCatalog.filter { it.id in equippedIds }
 
     Column(
         modifier = Modifier
@@ -58,23 +71,45 @@ fun PetScreen(appViewModel: AppViewModel) {
     ) {
         Box(Modifier.size(16.dp))
 
-        PetStageCard(onFeed = appViewModel::feedPet, onPlay = appViewModel::playWithPet)
+        PetStageCard(
+            feedCooldownMs = feedCooldownMs,
+            playCooldownMs = playCooldownMs,
+            onFeed = viewModel::feed,
+            onPlay = viewModel::play,
+            equippedItems = equippedItems,
+            onDecorate = { scope.launch { wardrobeRequester.bringIntoView() } },
+        )
 
         Box(Modifier.size(16.dp))
-        PetStatsCard(happiness = uiState.petState.happiness, satiety = uiState.petState.satiety, level = uiState.petState.level)
+        PetStatsCard(petState)
 
         Box(Modifier.size(16.dp))
-        WardrobeCard(items = uiState.wardrobe, onToggle = appViewModel::toggleWardrobeEquipped)
+        WardrobeCard(
+            level = petState?.level ?: 1,
+            equippedIds = equippedIds,
+            coins = uiState.coins,
+            ownedIds = uiState.wardrobe.filter { it.owned }.map { it.id }.toSet(),
+            onBuy = viewModel::buy,
+            onToggle = viewModel::toggleEquip,
+            modifier = Modifier.bringIntoViewRequester(wardrobeRequester),
+        )
 
         Box(Modifier.size(16.dp))
-        NeedMoreItemsCard()
+        TipCard()
 
         Box(Modifier.size(24.dp))
     }
 }
 
 @Composable
-private fun PetStageCard(onFeed: () -> Unit, onPlay: () -> Unit) {
+private fun PetStageCard(
+    feedCooldownMs: Long,
+    playCooldownMs: Long,
+    onFeed: () -> Unit,
+    onPlay: () -> Unit,
+    equippedItems: List<WardrobeCatalogItem>,
+    onDecorate: () -> Unit,
+) {
     Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {
         Column(
             modifier = Modifier
@@ -82,12 +117,18 @@ private fun PetStageCard(onFeed: () -> Unit, onPlay: () -> Unit) {
                 .padding(vertical = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Image(
-                painter = painterResource(R.drawable.img_zori_fox),
-                contentDescription = null,
-                modifier = Modifier.size(160.dp),
+            ZoriAvatar(equippedIds = equippedItems.map { it.id }.toSet(), size = 200.dp)
+            Box(Modifier.size(8.dp))
+            Text(
+                text = if (equippedItems.isEmpty()) {
+                    stringResource(R.string.pet_wearing_nothing)
+                } else {
+                    stringResource(R.string.pet_wearing) + " " + equippedItems.joinToString(" ") { it.emoji }
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Box(Modifier.size(20.dp))
+            Box(Modifier.size(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(onClick = onFeed, colors = ButtonDefaults.buttonColors(containerColor = BrandOrangeDeep), shape = RoundedCornerShape(50)) {
                     Text(stringResource(R.string.pet_feed))
@@ -95,16 +136,30 @@ private fun PetStageCard(onFeed: () -> Unit, onPlay: () -> Unit) {
                 Button(onClick = onPlay, colors = ButtonDefaults.buttonColors(containerColor = BrandOrange, contentColor = MaterialTheme.colorScheme.onPrimaryContainer), shape = RoundedCornerShape(50)) {
                     Text(stringResource(R.string.pet_play))
                 }
-                OutlinedButton(onClick = { }, shape = RoundedCornerShape(50)) {
+                OutlinedButton(onClick = onDecorate, shape = RoundedCornerShape(50)) {
                     Text(stringResource(R.string.pet_decorate))
                 }
+            }
+            val feedMinutes = (feedCooldownMs / 60_000L + 1).coerceAtLeast(1)
+            val playMinutes = (playCooldownMs / 60_000L + 1).coerceAtLeast(1)
+            if (feedCooldownMs > 0 || playCooldownMs > 0) {
+                Box(Modifier.size(8.dp))
+                Text(
+                    text = when {
+                        feedCooldownMs > 0 && playCooldownMs > 0 -> stringResource(R.string.pet_cooldown_available_in, maxOf(feedMinutes, playMinutes))
+                        feedCooldownMs > 0 -> stringResource(R.string.pet_feed) + ": " + stringResource(R.string.pet_cooldown_available_in, feedMinutes)
+                        else -> stringResource(R.string.pet_play) + ": " + stringResource(R.string.pet_cooldown_available_in, playMinutes)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }
 }
 
 @Composable
-private fun PetStatsCard(happiness: Float, satiety: Float, level: Int) {
+private fun PetStatsCard(petState: PetStateEntity?) {
     Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(Modifier.padding(24.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -115,13 +170,13 @@ private fun PetStatsCard(happiness: Float, satiety: Float, level: Int) {
                         .background(BrandOrangeDeep)
                         .padding(horizontal = 12.dp, vertical = 4.dp),
                 ) {
-                    Text(stringResource(R.string.pet_level, level), color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(R.string.pet_level, petState?.level ?: 1), color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.labelLarge)
                 }
             }
             Box(Modifier.size(16.dp))
-            StatBar(stringResource(R.string.pet_happiness), happiness, BrandOrange)
+            StatBar(stringResource(R.string.pet_happiness), petState?.happiness ?: 0.5f, BrandOrange)
             Box(Modifier.size(12.dp))
-            StatBar(stringResource(R.string.pet_satiety), satiety, BrandOrangeDeep)
+            StatBar(stringResource(R.string.pet_satiety), petState?.satiety ?: 0.5f, BrandOrangeDeep)
         }
     }
 }
@@ -147,12 +202,24 @@ private fun StatBar(label: String, value: Float, color: androidx.compose.ui.grap
 }
 
 @Composable
-private fun WardrobeCard(items: List<PetWardrobeItem>, onToggle: (String) -> Unit) {
-    Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+private fun WardrobeCard(
+    level: Int,
+    equippedIds: Set<String>,
+    ownedIds: Set<String>,
+    coins: Int,
+    onBuy: (String) -> Unit,
+    onToggle: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(modifier = modifier, shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(Modifier.padding(24.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(stringResource(R.string.pet_wardrobe_title), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
-                Text(stringResource(R.string.pet_shop), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    stringResource(R.string.pet_coins_balance, coins),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = BrandOrangeDeep,
+                )
             }
             Text(
                 stringResource(R.string.pet_wardrobe_subtitle),
@@ -160,95 +227,137 @@ private fun WardrobeCard(items: List<PetWardrobeItem>, onToggle: (String) -> Uni
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp, bottom = 16.dp),
             )
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.height(380.dp),
-            ) {
-                items(items) { item -> WardrobeItemCard(item = item, onToggle = { onToggle(item.id) }) }
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                WardrobeCatalog.chunked(2).forEach { rowItems ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        rowItems.forEach { catalogItem ->
+                            WardrobeItemCard(
+                                item = catalogItem,
+                                unlocked = level >= catalogItem.unlockLevel,
+                                owned = catalogItem.id in ownedIds,
+                                equipped = catalogItem.id in equippedIds,
+                                canAfford = coins >= catalogItem.price,
+                                onBuy = { onBuy(catalogItem.id) },
+                                onToggle = { onToggle(catalogItem.id) },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        if (rowItems.size == 1) Box(Modifier.weight(1f))
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun WardrobeItemCard(item: PetWardrobeItem, onToggle: () -> Unit) {
+private fun WardrobeItemCard(
+    item: WardrobeCatalogItem,
+    unlocked: Boolean,
+    owned: Boolean,
+    equipped: Boolean,
+    canAfford: Boolean,
+    onBuy: () -> Unit,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val shape = RoundedCornerShape(16.dp)
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(if (item.unlocked) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surfaceContainer)
+        modifier = modifier
+            .clip(shape)
+            .background(
+                when {
+                    equipped -> MaterialTheme.colorScheme.primaryContainer
+                    unlocked -> MaterialTheme.colorScheme.surfaceContainerHigh
+                    else -> MaterialTheme.colorScheme.surfaceContainer
+                },
+            )
             .border(
-                width = if (item.unlocked) 0.dp else 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant,
-                shape = RoundedCornerShape(16.dp),
+                width = if (equipped) 2.dp else if (unlocked) 0.dp else 1.dp,
+                color = if (equipped) BrandOrangeDeep else MaterialTheme.colorScheme.outlineVariant,
+                shape = shape,
             )
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
             modifier = Modifier
-                .size(48.dp)
+                .size(56.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surface)
-                .alpha(if (item.unlocked) 1f else 0.6f),
+                .background(MaterialTheme.colorScheme.surface),
             contentAlignment = Alignment.Center,
         ) {
-            if (item.unlocked) {
-                Icon(item.icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            } else {
-                Icon(Icons.Outlined.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                text = item.emoji,
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.alpha(if (unlocked) 1f else 0.35f),
+            )
+            if (!unlocked) {
+                Icon(Icons.Outlined.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
             }
         }
         Text(
             text = stringResource(item.nameRes),
             style = MaterialTheme.typography.bodyLarge,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 8.dp),
         )
         Box(Modifier.size(8.dp))
-        if (item.unlocked) {
-            Button(
-                onClick = onToggle,
-                colors = ButtonDefaults.buttonColors(containerColor = BrandOrange, contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-                shape = RoundedCornerShape(50),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 4.dp, horizontal = 12.dp),
-            ) {
-                Text(
-                    text = stringResource(if (item.equipped) R.string.pet_equip else R.string.pet_wear),
-                    style = MaterialTheme.typography.labelMedium,
-                )
-            }
-        } else {
-            Text(
-                text = stringResource(R.string.pet_tasks_remaining, item.tasksRemaining ?: 0),
+        when {
+            !unlocked -> Text(
+                text = stringResource(R.string.pet_level_required, item.unlockLevel),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            equipped -> {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Check, contentDescription = null, tint = BrandOrangeDeep, modifier = Modifier.size(16.dp))
+                    Text(
+                        text = stringResource(R.string.pet_equipped_badge),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = BrandOrangeDeep,
+                        modifier = Modifier.padding(start = 4.dp),
+                    )
+                }
+                OutlinedButton(
+                    onClick = onToggle,
+                    shape = RoundedCornerShape(50),
+                    contentPadding = PaddingValues(vertical = 4.dp, horizontal = 12.dp),
+                ) {
+                    Text(stringResource(R.string.pet_remove), style = MaterialTheme.typography.labelMedium)
+                }
+            }
+            !owned -> Button(
+                onClick = onBuy,
+                enabled = canAfford,
+                colors = ButtonDefaults.buttonColors(containerColor = BrandOrangeDeep),
+                shape = RoundedCornerShape(50),
+                contentPadding = PaddingValues(vertical = 4.dp, horizontal = 12.dp),
+            ) {
+                Text(stringResource(R.string.pet_buy, item.price), style = MaterialTheme.typography.labelMedium)
+            }
+            else -> Button(
+                onClick = onToggle,
+                colors = ButtonDefaults.buttonColors(containerColor = BrandOrange, contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+                shape = RoundedCornerShape(50),
+                contentPadding = PaddingValues(vertical = 4.dp, horizontal = 12.dp),
+            ) {
+                Text(stringResource(R.string.pet_wear), style = MaterialTheme.typography.labelMedium)
+            }
         }
     }
 }
 
 @Composable
-private fun NeedMoreItemsCard() {
+private fun TipCard() {
     Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = BrandOrangeDeep)) {
         Column(Modifier.padding(24.dp)) {
-            Text(stringResource(R.string.pet_need_more_title), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimary)
+            Text(stringResource(R.string.pet_tip_title), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimary)
             Text(
-                stringResource(R.string.pet_need_more_subtitle),
+                stringResource(R.string.pet_tip_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
-                modifier = Modifier.padding(top = 4.dp, bottom = 16.dp),
             )
-            Button(
-                onClick = { },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface, contentColor = BrandOrangeDeep),
-                shape = RoundedCornerShape(50),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(R.string.pet_view_tasks))
-            }
         }
     }
 }

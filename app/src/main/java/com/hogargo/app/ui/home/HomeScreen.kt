@@ -31,6 +31,7 @@ import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.LocalFireDepartment
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.Pets
@@ -71,23 +72,43 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.hogargo.app.HogarGoApplication
 import com.hogargo.app.R
 import com.hogargo.app.data.AppViewModel
 import com.hogargo.app.data.FamilyMembers
-import com.hogargo.app.data.HomeSavingsGoal
+import com.hogargo.app.data.local.SavingsGoalEntity
 import com.hogargo.app.data.HouseTask
 import com.hogargo.app.data.getDisplayTitle
+import com.hogargo.app.data.local.ExpenseCategory
+import com.hogargo.app.ui.calendar.CalendarViewModel
+import com.hogargo.app.ui.finance.AddExpenseDialog
+import com.hogargo.app.ui.finance.FinanceViewModel
+import com.hogargo.app.ui.pet.PetViewModel
+import com.hogargo.app.ui.pet.ZoriAvatar
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 
+private const val MaxHomeGoals = 3
+
 @Composable
 fun HomeScreen(
     appViewModel: AppViewModel,
     onNewTask: () -> Unit,
+    onOpenFinance: () -> Unit = {},
+    onOpenPet: () -> Unit = {},
+    onOpenAbout: () -> Unit = {},
 ) {
+    val application = LocalContext.current.applicationContext as HogarGoApplication
+    val financeViewModel: FinanceViewModel = viewModel(factory = FinanceViewModel.factory(application.financeRepository))
+    val petViewModel: PetViewModel = viewModel(factory = PetViewModel.factory(application.petRepository))
+    val calendarViewModel: CalendarViewModel = viewModel(factory = CalendarViewModel.factory(application.calendarRepository))
+
     val uiState by appViewModel.uiState.collectAsState()
+    val financeState by financeViewModel.uiState.collectAsState()
+    val petState by petViewModel.uiState.collectAsState()
     var showNewEventDialog by rememberSaveable { mutableStateOf(false) }
     var showNewExpenseDialog by rememberSaveable { mutableStateOf(false) }
     var showMoreBottomSheet by rememberSaveable { mutableStateOf(false) }
@@ -96,23 +117,27 @@ fun HomeScreen(
         NewEventDialog(
             onDismiss = { showNewEventDialog = false },
             onSave = { title, dateLabel, timeLabel ->
-                appViewModel.addNewEvent(title, dateLabel, timeLabel)
+                calendarViewModel.addEvent(title, dateLabel, timeLabel)
             },
         )
     }
 
     if (showNewExpenseDialog) {
-        NewExpenseDialog(
+        AddExpenseDialog(
             onDismiss = { showNewExpenseDialog = false },
-            onSave = { merchant, category, amount, dateLabel ->
-                appViewModel.addNewExpense(merchant, category, amount, dateLabel)
+            onConfirm = { title, category, amount, date ->
+                financeViewModel.addExpense(title, category, amount, date)
+                showNewExpenseDialog = false
             },
         )
     }
 
     if (showMoreBottomSheet) {
         MoreBottomSheet(
-            appViewModel = appViewModel,
+            onOpenAbout = {
+                showMoreBottomSheet = false
+                onOpenAbout()
+            },
             onDismiss = { showMoreBottomSheet = false },
         )
     }
@@ -140,7 +165,7 @@ fun HomeScreen(
 
         Box(Modifier.height(16.dp))
 
-        ZoriRestingCard()
+        ZoriRestingCard(equippedIds = petState.wardrobe.filter { it.equipped }.map { it.id }.toSet(), onClick = onOpenPet)
 
         Box(Modifier.height(16.dp))
 
@@ -151,7 +176,24 @@ fun HomeScreen(
 
         Box(Modifier.height(16.dp))
 
-        SavingsGoalCard()
+        val goals = financeState.savingsGoals
+        if (goals.isEmpty()) {
+            SavingsGoalCard(goal = null, onClick = onOpenFinance)
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                goals.take(MaxHomeGoals).forEach { goal ->
+                    SavingsGoalCard(goal = goal, onClick = onOpenFinance)
+                }
+                if (goals.size > MaxHomeGoals) {
+                    Text(
+                        text = stringResource(R.string.home_more_goals, goals.size - MaxHomeGoals),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable(onClick = onOpenFinance),
+                    )
+                }
+            }
+        }
 
         Box(Modifier.height(16.dp))
 
@@ -169,10 +211,9 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MoreBottomSheet(
-    appViewModel: AppViewModel,
+    onOpenAbout: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val context = LocalContext.current
     var showMembersDialog by rememberSaveable { mutableStateOf(false) }
 
     if (showMembersDialog) {
@@ -200,14 +241,10 @@ private fun MoreBottomSheet(
             Box(Modifier.height(4.dp))
 
             MoreOptionRow(
-                icon = Icons.Outlined.Pets,
-                title = "Alimentar Mascota (Zori)",
-                subtitle = "Dale de comer a Zori para aumentar su saciedad",
-                onClick = {
-                    appViewModel.feedPet()
-                    Toast.makeText(context, "🍎 ¡Has alimentado a Zori!", Toast.LENGTH_SHORT).show()
-                    onDismiss()
-                },
+                icon = Icons.Outlined.Info,
+                title = stringResource(R.string.more_about_title),
+                subtitle = stringResource(R.string.more_about_subtitle),
+                onClick = onOpenAbout,
             )
 
             MoreOptionRow(
@@ -314,134 +351,6 @@ private fun HouseholdMembersDialog(onDismiss: () -> Unit) {
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text(stringResource(android.R.string.ok))
-            }
-        },
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun NewExpenseDialog(
-    onDismiss: () -> Unit,
-    onSave: (merchant: String, category: String, amount: Double, dateLabel: String) -> Unit,
-) {
-    val context = LocalContext.current
-    var merchant by rememberSaveable { mutableStateOf("") }
-    var category by rememberSaveable { mutableStateOf("Supermercado") }
-    var amountText by rememberSaveable { mutableStateOf("") }
-    var expenseDateLabel by rememberSaveable { mutableStateOf(context.getString(R.string.new_task_today)) }
-
-    var showDatePicker by rememberSaveable { mutableStateOf(false) }
-
-    val categories = listOf("Supermercado", "Servicios", "Mascota", "Ocio", "Otros")
-    val categoryScrollState = rememberScrollState()
-
-    if (showDatePicker) {
-        val datePickerState = rememberDatePickerState()
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        val cal = Calendar.getInstance().apply {
-                            timeInMillis = millis + TimeZone.getDefault().getOffset(millis)
-                        }
-                        val today = Calendar.getInstance()
-                        val isToday = (cal[Calendar.YEAR] == today[Calendar.YEAR]) && (cal[Calendar.DAY_OF_YEAR] == today[Calendar.DAY_OF_YEAR])
-                        expenseDateLabel = if (isToday) context.getString(R.string.new_task_today) else SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(cal.time)
-                    }
-                    showDatePicker = false
-                }) {
-                    Text(stringResource(android.R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text(stringResource(android.R.string.cancel))
-                }
-            },
-        ) {
-            DatePicker(state = datePickerState)
-        }
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.home_quick_add_expense), style = MaterialTheme.typography.titleLarge) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                OutlinedTextField(
-                    value = merchant,
-                    onValueChange = { merchant = it },
-                    label = { Text("Establecimiento / Comercio") },
-                    placeholder = { Text("Ej. Supermercado, Farmacia, Cine") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                )
-                OutlinedTextField(
-                    value = amountText,
-                    onValueChange = { input ->
-                        if (input.isEmpty() || input.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
-                            amountText = input
-                        }
-                    },
-                    label = { Text("Monto ($)") },
-                    placeholder = { Text("0.00") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                )
-                Text("Categoría", style = MaterialTheme.typography.labelLarge)
-                Row(
-                    modifier = Modifier.horizontalScroll(categoryScrollState),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    categories.forEach { cat ->
-                        FilterChip(
-                            selected = category == cat,
-                            onClick = { category = cat },
-                            label = { Text(cat, style = MaterialTheme.typography.labelSmall) },
-                        )
-                    }
-                }
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { showDatePicker = true },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Icon(Icons.Outlined.CalendarToday, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
-                        Text("Fecha: $expenseDateLabel", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val amount = amountText.toDoubleOrNull() ?: 0.0
-                    if (merchant.isNotBlank() && amount > 0.0) {
-                        onSave(merchant.trim(), category, amount, expenseDateLabel)
-                        onDismiss()
-                    }
-                },
-                enabled = merchant.isNotBlank() && (amountText.toDoubleOrNull() ?: 0.0) > 0.0,
-                shape = RoundedCornerShape(12.dp),
-            ) {
-                Text(stringResource(R.string.new_task_create))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(android.R.string.cancel))
             }
         },
     )
@@ -609,8 +518,9 @@ private fun StreakChip(streakDays: Int) {
 }
 
 @Composable
-private fun ZoriRestingCard() {
+private fun ZoriRestingCard(equippedIds: Set<String>, onClick: () -> Unit) {
     Card(
+        onClick = onClick,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         shape = RoundedCornerShape(24.dp),
     ) {
@@ -635,11 +545,7 @@ private fun ZoriRestingCard() {
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
-            Image(
-                painter = painterResource(R.drawable.img_zori_fox),
-                contentDescription = null,
-                modifier = Modifier.size(96.dp),
-            )
+            ZoriAvatar(equippedIds = equippedIds, size = 110.dp)
         }
     }
 }
@@ -704,19 +610,37 @@ private fun NextTaskCard(
 }
 
 @Composable
-private fun SavingsGoalCard() {
-    val progress = HomeSavingsGoal.current.toFloat() / HomeSavingsGoal.target.toFloat()
+private fun SavingsGoalCard(goal: SavingsGoalEntity?, onClick: () -> Unit) {
     Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         shape = RoundedCornerShape(24.dp),
     ) {
+        if (goal == null) {
+            Column(Modifier.fillMaxWidth().padding(20.dp)) {
+                Text(
+                    text = stringResource(R.string.finance_goal_empty_title),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = stringResource(R.string.finance_goal_empty_action),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+            return@Card
+        }
+        val progress = if (goal.targetAmount > 0) (goal.currentAmount / goal.targetAmount).toFloat().coerceIn(0f, 1f) else 0f
         Column(Modifier.padding(20.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    text = stringResource(HomeSavingsGoal.titleRes),
+                    text = goal.title,
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -737,12 +661,12 @@ private fun SavingsGoalCard() {
             )
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(
-                    text = stringResource(R.string.home_saved_amount, "$${HomeSavingsGoal.current}"),
+                    text = stringResource(R.string.home_saved_amount, "$${"%.2f".format(goal.currentAmount)}"),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = stringResource(R.string.home_goal_amount, "$${HomeSavingsGoal.target}"),
+                    text = stringResource(R.string.home_goal_amount, "$${"%.2f".format(goal.targetAmount)}"),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -767,49 +691,58 @@ private fun QuickActionsGrid(
         QuickAction(QuickActionType.EVENT, stringResource(R.string.home_quick_event), Icons.Outlined.CalendarMonth),
         QuickAction(QuickActionType.MORE, stringResource(R.string.home_quick_more), Icons.Outlined.MoreHoriz),
     )
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.height(232.dp),
-        contentPadding = PaddingValues(bottom = 8.dp),
-    ) {
-        items(actions) { action ->
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                modifier = Modifier
-                    .aspectRatio(1.6f)
-                    .clickable {
-                        when (action.type) {
-                            QuickActionType.NEW_TASK -> onNewTask()
-                            QuickActionType.ADD_EXPENSE -> onNewExpense()
-                            QuickActionType.EVENT -> onNewEvent()
-                            QuickActionType.MORE -> onMore()
-                        }
-                    },
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        actions.chunked(2).forEach { rowActions ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(action.icon, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
-                    }
-                    Text(
-                        text = action.label,
-                        style = MaterialTheme.typography.labelLarge,
-                        modifier = Modifier.padding(top = 8.dp),
+                rowActions.forEach { action ->
+                    QuickActionCard(
+                        action = action,
+                        onClick = {
+                            when (action.type) {
+                                QuickActionType.NEW_TASK -> onNewTask()
+                                QuickActionType.ADD_EXPENSE -> onNewExpense()
+                                QuickActionType.EVENT -> onNewEvent()
+                                QuickActionType.MORE -> onMore()
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun QuickActionCard(action: QuickAction, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Card(
+        onClick = onClick,
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        modifier = modifier.aspectRatio(1.6f),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(action.icon, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+            }
+            Text(
+                text = action.label,
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(top = 8.dp),
+            )
         }
     }
 }

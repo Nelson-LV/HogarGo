@@ -3,20 +3,14 @@ package com.hogargo.app.data
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.hogargo.app.data.local.AppDatabase
-import com.hogargo.app.data.local.EventEntity
-import com.hogargo.app.data.local.ExpenseEntity
-import com.hogargo.app.data.local.InitialEvents
-import com.hogargo.app.data.local.InitialExpenses
+import com.hogargo.app.data.local.HogarGoDatabase
 import com.hogargo.app.data.local.toHouseTask
 import com.hogargo.app.data.local.toTaskEntity
 import com.hogargo.app.data.notification.StreakNotificationHelper
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -28,54 +22,36 @@ data class AppUiState(
     val tasks: List<HouseTask> = emptyList(),
     val nextTask: HouseTask? = null,
     val streakDays: Int = 4,
-    val events: List<EventEntity> = emptyList(),
-    val expenses: List<ExpenseEntity> = emptyList(),
-    val petState: PetState = InitialPetState,
-    val wardrobe: List<PetWardrobeItem> = WardrobeItems,
 )
 
+/**
+ * Owns Tareas: persisted via Room (TaskEntity/TaskDao on the shared HogarGoDatabase),
+ * plus the daily-streak calculation and its notification. Finanzas/Mascota/Calendario
+ * each have their own Repository+ViewModel instead of living here — see
+ * HogarGoApplication for how those are wired.
+ */
 class AppViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val db = AppDatabase.getDatabase(application)
+    private val db = HogarGoDatabase.getInstance(application)
     private val taskDao = db.taskDao()
-    private val eventDao = db.eventDao()
-    private val expenseDao = db.expenseDao()
-
-    private val _petState = MutableStateFlow(InitialPetState)
-    private val _wardrobe = MutableStateFlow(WardrobeItems)
 
     init {
         viewModelScope.launch {
             if (taskDao.getTaskCount() == 0) {
                 taskDao.insertTasks(InitialTasks.map { it.toTaskEntity() })
             }
-            if (eventDao.getEventCount() == 0) {
-                eventDao.insertEvents(InitialEvents)
-            }
-            if (expenseDao.getExpenseCount() == 0) {
-                expenseDao.insertExpenses(InitialExpenses)
-            }
         }
     }
 
     val uiState: StateFlow<AppUiState> = combine(
-        combine(taskDao.getAllTasks(), taskDao.getNextPendingTask(), eventDao.getAllEvents()) { tasks, next, events ->
-            Triple(tasks, next, events)
-        },
-        combine(expenseDao.getAllExpenses(), _petState, _wardrobe) { expenses, pet, wardrobe ->
-            Triple(expenses, pet, wardrobe)
-        },
-    ) { (tasks, next, events), (expenses, pet, wardrobe) ->
+        taskDao.getAllTasks(),
+        taskDao.getNextPendingTask(),
+    ) { tasks, next ->
         val tasksList = tasks.map { it.toHouseTask() }
-        val streak = calculateStreakDays(tasksList)
         AppUiState(
             tasks = tasksList,
             nextTask = next?.toHouseTask(),
-            streakDays = streak,
-            events = events,
-            expenses = expenses,
-            petState = pet,
-            wardrobe = wardrobe,
+            streakDays = calculateStreakDays(tasksList),
         )
     }.stateIn(
         scope = viewModelScope,
@@ -150,58 +126,6 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 coinReward = coinReward,
             )
             taskDao.insertTask(newTask.toTaskEntity())
-        }
-    }
-
-    fun addNewEvent(title: String, dateLabel: String, timeLabel: String? = null) {
-        viewModelScope.launch {
-            val formattedDate = if (!timeLabel.isNullOrBlank()) "$dateLabel • $timeLabel" else dateLabel
-            val newEvent = EventEntity(
-                id = UUID.randomUUID().toString(),
-                title = title,
-                dateLabel = formattedDate,
-                done = false,
-            )
-            eventDao.insertEvent(newEvent)
-        }
-    }
-
-    fun toggleEventDone(eventId: String, currentDone: Boolean) {
-        viewModelScope.launch {
-            eventDao.updateEventDone(eventId, !currentDone)
-        }
-    }
-
-    fun addNewExpense(merchant: String, category: String, amount: Double, dateLabel: String) {
-        viewModelScope.launch {
-            val newExpense = ExpenseEntity(
-                id = UUID.randomUUID().toString(),
-                merchant = merchant,
-                category = category,
-                amount = amount,
-                dateLabel = dateLabel,
-            )
-            expenseDao.insertExpense(newExpense)
-        }
-    }
-
-    fun toggleWardrobeEquipped(itemId: String) {
-        _wardrobe.update { items ->
-            items.map { item ->
-                if (item.id == itemId && item.unlocked) item.copy(equipped = !item.equipped) else item
-            }
-        }
-    }
-
-    fun feedPet() {
-        _petState.update { state ->
-            state.copy(satiety = (state.satiety + 0.1f).coerceAtMost(1f))
-        }
-    }
-
-    fun playWithPet() {
-        _petState.update { state ->
-            state.copy(happiness = (state.happiness + 0.1f).coerceAtMost(1f))
         }
     }
 }

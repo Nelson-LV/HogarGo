@@ -3,8 +3,6 @@ package com.hogargo.app.data
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import com.hogargo.app.R
 
@@ -38,64 +36,3 @@ data class HouseTask(
 fun HouseTask.getDisplayTitle(): String {
     return titleRes?.let { stringResource(it) } ?: titleText ?: ""
 }
-
-data class Expense(
-    val id: String,
-    @StringRes val merchantRes: Int,
-    @StringRes val categoryRes: Int,
-    val amount: Double,
-    @StringRes val dateRes: Int,
-    val icon: ImageVector,
-    val iconBackground: Color,
-)
-
-data class ExpenseCategoryShare(
-    @StringRes val labelRes: Int,
-    val amount: Double,
-    val fraction: Float,
-    val color: Color,
-)
-
-data class Bill(
-    val id: String,
-    @StringRes val nameRes: Int,
-    val amount: Double,
-    val dueToday: Boolean,
-    val dateLabel: String? = null,
-    val icon: ImageVector,
-    val iconBackground: Color,
-)
-
-data class SavingsGoal(
-    @StringRes val titleRes: Int,
-    val current: Int,
-    val target: Int,
-)
-
-data class CalendarDayInfo(
-    val day: Int,
-    val dotColors: List<Color> = emptyList(),
-)
-
-data class UpcomingChore(
-    @StringRes val titleRes: Int,
-    val whenLabelKey: WhenLabel,
-    val done: Boolean = false,
-)
-
-enum class WhenLabel { TODAY_4PM, TOMORROW }
-
-data class PetWardrobeItem(
-    val id: String,
-    @StringRes val nameRes: Int,
-    val icon: ImageVector,
-    val unlocked: Boolean,
-    val equipped: Boolean = false,
-    val tasksRemaining: Int? = null,
-)
-
-data class PetState(
-    val level: Int,
-    val happiness: Float,
-    val satiety: Float,
-)

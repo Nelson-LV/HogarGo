@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -19,18 +20,24 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.hogargo.app.HogarGoApplication
 import com.hogargo.app.R
 import com.hogargo.app.data.AppViewModel
+import com.hogargo.app.ui.about.AboutScreen
 import com.hogargo.app.ui.calendar.CalendarScreen
+import com.hogargo.app.ui.calendar.CalendarViewModel
 import com.hogargo.app.ui.finance.FinanceScreen
+import com.hogargo.app.ui.finance.FinanceViewModel
 import com.hogargo.app.ui.home.HomeScreen
 import com.hogargo.app.ui.newtask.NewTaskScreen
 import com.hogargo.app.ui.pet.PetScreen
+import com.hogargo.app.ui.pet.PetViewModel
 import com.hogargo.app.ui.tasks.TasksScreen
 
 @Composable
 fun HogarGoApp(appViewModel: AppViewModel = viewModel()) {
     val navController = rememberNavController()
+    val application = LocalContext.current.applicationContext as HogarGoApplication
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination
 
@@ -43,6 +50,11 @@ fun HogarGoApp(appViewModel: AppViewModel = viewModel()) {
             if (currentRoute?.route == Routes.NEW_TASK) {
                 HogarGoDetailTopBar(
                     title = stringResource(R.string.new_task_title),
+                    onBack = { navController.popBackStack() },
+                )
+            } else if (currentRoute?.route == Routes.ABOUT) {
+                HogarGoDetailTopBar(
+                    title = stringResource(R.string.about_title),
                     onBack = { navController.popBackStack() },
                 )
             } else {
@@ -59,11 +71,18 @@ fun HogarGoApp(appViewModel: AppViewModel = viewModel()) {
             navController = navController,
             startDestination = Routes.HOME,
             modifier = Modifier.padding(innerPadding),
+            enterTransition = { hogarGoEnter() },
+            exitTransition = { hogarGoExit() },
+            popEnterTransition = { hogarGoEnter() },
+            popExitTransition = { hogarGoExit() },
         ) {
             composable(Routes.HOME) {
                 HomeScreen(
                     appViewModel = appViewModel,
                     onNewTask = { navController.navigate(Routes.NEW_TASK) },
+                    onOpenFinance = { navController.navigateToTab(Routes.FINANCE) },
+                    onOpenPet = { navController.navigateToTab(Routes.PET) },
+                    onOpenAbout = { navController.navigate(Routes.ABOUT) },
                 )
             }
             composable(Routes.TASKS) {
@@ -78,14 +97,20 @@ fun HogarGoApp(appViewModel: AppViewModel = viewModel()) {
                     onBack = { navController.popBackStack() },
                 )
             }
+            composable(Routes.ABOUT) {
+                AboutScreen()
+            }
             composable(Routes.FINANCE) {
-                FinanceScreen(appViewModel = appViewModel)
+                val financeViewModel: FinanceViewModel = viewModel(factory = FinanceViewModel.factory(application.financeRepository))
+                FinanceScreen(viewModel = financeViewModel)
             }
             composable(Routes.PET) {
-                PetScreen(appViewModel = appViewModel)
+                val petViewModel: PetViewModel = viewModel(factory = PetViewModel.factory(application.petRepository))
+                PetScreen(viewModel = petViewModel)
             }
             composable(Routes.CALENDAR) {
-                CalendarScreen(appViewModel = appViewModel)
+                val calendarViewModel: CalendarViewModel = viewModel(factory = CalendarViewModel.factory(application.calendarRepository))
+                CalendarScreen(viewModel = calendarViewModel)
             }
         }
     }
@@ -98,15 +123,7 @@ private fun HogarGoBottomBar(navController: androidx.navigation.NavController, c
             val selected = currentRoute == destination.route
             NavigationBarItem(
                 selected = selected,
-                onClick = {
-                    navController.navigate(destination.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
+                onClick = { navController.navigateToTab(destination.route) },
                 icon = {
                     Icon(
                         imageVector = if (selected) destination.selectedIcon else destination.unselectedIcon,
@@ -119,5 +136,15 @@ private fun HogarGoBottomBar(navController: androidx.navigation.NavController, c
                 ),
             )
         }
+    }
+}
+
+private fun androidx.navigation.NavController.navigateToTab(route: String) {
+    navigate(route) {
+        popUpTo(graph.findStartDestination().id) {
+            saveState = true
+        }
+        launchSingleTop = true
+        restoreState = true
     }
 }

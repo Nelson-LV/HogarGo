@@ -18,7 +18,7 @@
     <string name="home_zori_resting_subtitle">¡Completa tareas para despertar a Zori y ganar las recompensas de hoy!</string>
     <string name="home_start_day">Empezar Día</string>
     <string name="home_next_task">Siguiente Tarea</string>
-    <string name="home_savings_goal">Fondo de Vacaciones</string>
+    <string name="home_more_goals">Ver %1$d meta(s) más</string>
     <string name="home_saved_amount">%1$s ahorrado</string>
     <string name="home_goal_amount">Meta: %1$s</string>
     <string name="home_quick_new_task">Nueva Tarea</string>
@@ -62,29 +62,63 @@
     <string name="finance_new_expense">Nuevo Gasto</string>
     <string name="finance_this_month">Este Mes</string>
     <string name="finance_spent">Gastado</string>
-    <string name="finance_remaining">Restante</string>
+    <string name="finance_average">Promedio</string>
     <string name="finance_breakdown">Desglose de Gastos</string>
     <string name="finance_recent_expenses">Gastos Recientes</string>
-    <string name="finance_view_all">Ver Todo</string>
     <string name="finance_savings_progress">%1$s / %2$s</string>
 
     <string name="expense_category_groceries">Comestibles</string>
     <string name="expense_category_bills">Servicios y Facturas</string>
     <string name="expense_category_pet">Cuidado de Mascota</string>
     <string name="expense_category_leisure">Ocio y Cenas</string>
-    <string name="expense_category_services">Servicios</string>
+    <string name="expense_category_other">Otros</string>
+
+    <!-- Finance: add expense dialog -->
+    <string name="finance_expense_name_label">Descripción</string>
+    <string name="finance_expense_name_hint">Ej: Supermercado</string>
+    <string name="finance_expense_category_label">Categoría</string>
+    <string name="finance_expense_amount_label">Monto</string>
+    <string name="finance_add_button">Agregar</string>
+    <string name="finance_cancel_button">Cancelar</string>
+    <string name="finance_delete_expense_cd">Eliminar gasto</string>
+    <string name="finance_empty_expenses">Aún no has registrado gastos. Toca \"Nuevo Gasto\" para añadir el primero.</string>
+    <string name="finance_error_empty_title">Escribe una descripción</string>
+    <string name="finance_error_invalid_amount">Ingresa un monto válido mayor a 0</string>
+
+    <!-- Finance: savings goal -->
+    <string name="finance_goal_create_title">Crear Meta de Ahorro</string>
+    <string name="finance_goal_name_label">Nombre de la meta</string>
+    <string name="finance_goal_name_hint">Ej: Vacaciones</string>
+    <string name="finance_goal_target_label">Monto objetivo</string>
+    <string name="finance_goal_create_button">Crear Meta</string>
+    <string name="finance_goal_empty_title">Aún no tienes una meta de ahorro.</string>
+    <string name="finance_goal_empty_action">Crear meta</string>
+    <string name="finance_goals_title">Metas de ahorro</string>
+    <string name="finance_goal_new">Nueva meta</string>
+    <string name="finance_goal_delete_title">¿Eliminar meta?</string>
+    <string name="finance_goal_delete_message">Se eliminará \"%1$s\" junto con su progreso.</string>
+    <string name="finance_goal_delete_button">Eliminar</string>
+    <string name="finance_goal_contribute_to">Aportar a %1$s</string>
+    <string name="finance_goal_contribute_amount_label">Monto a aportar</string>
+    <string name="finance_goal_contribute_button">Aportar</string>
 
     <!-- Calendar -->
     <string name="calendar_title">Calendario</string>
     <string name="calendar_subtitle">Un resumen cálido de los ritmos de tu mes.</string>
-    <string name="calendar_upcoming_tasks">Próximas Tareas</string>
+    <string name="calendar_upcoming_tasks">Próximos Eventos</string>
+    <string name="calendar_events_empty">No hay eventos programados.</string>
     <string name="calendar_bills_due">Vencimiento de Facturas</string>
     <string name="calendar_due_today">¡Vence Hoy!</string>
-    <string name="calendar_today">Hoy, %1$s</string>
-    <string name="calendar_tomorrow">Mañana</string>
     <string name="calendar_month_year">%1$s %2$d</string>
     <string name="calendar_prev_month">Mes anterior</string>
     <string name="calendar_next_month">Mes siguiente</string>
+    <string name="calendar_add_bill">Nueva Factura</string>
+    <string name="calendar_bill_name_label">Nombre</string>
+    <string name="calendar_bill_name_hint">Ej: Internet</string>
+    <string name="calendar_bill_due_date_label">Fecha de vencimiento</string>
+    <string name="calendar_change_date">Cambiar</string>
+    <string name="calendar_bills_empty">Aún no tienes facturas registradas. Toca + para añadir la primera.</string>
+    <string name="calendar_delete_bill_cd">Eliminar factura</string>
 
     <string-array name="days_of_week_short">
         <item>Dom</item>
@@ -120,14 +154,18 @@
     <string name="pet_happiness">Felicidad</string>
     <string name="pet_satiety">Saciedad</string>
     <string name="pet_wardrobe_title">Armario</string>
-    <string name="pet_wardrobe_subtitle">¡Completa tareas familiares para desbloquear nuevos objetos para Zori!</string>
-    <string name="pet_shop">Tienda</string>
+    <string name="pet_wardrobe_subtitle">¡Cuida a Zori para subir de nivel y gana monedas con tareas para comprar nuevos objetos!</string>
     <string name="pet_wear">Poner</string>
-    <string name="pet_equip">Equipar</string>
-    <string name="pet_tasks_remaining">%1$d tareas restantes</string>
-    <string name="pet_need_more_title">¿Necesitas más objetos?</string>
-    <string name="pet_need_more_subtitle">Completa una tarea rápida para ganar Fichas de Mascota.</string>
-    <string name="pet_view_tasks">Ver Tareas</string>
+    <string name="pet_buy">Comprar · %1$d 🪙</string>
+    <string name="pet_coins_balance">🪙 %1$d</string>
+    <string name="pet_remove">Quitar</string>
+    <string name="pet_equipped_badge">Puesto</string>
+    <string name="pet_wearing">Zori lleva puesto:</string>
+    <string name="pet_wearing_nothing">Nada todavía. ¡Pulsa Decorar!</string>
+    <string name="pet_level_required">Nivel %1$d requerido</string>
+    <string name="pet_tip_title">Sigue cuidando a Zori</string>
+    <string name="pet_tip_subtitle">Aliméntalo y juega con él para subir de nivel y desbloquear nuevos objetos.</string>
+    <string name="pet_cooldown_available_in">Disponible en %1$d min</string>
     <string name="pet_item_scarf">Bufanda Acogedora</string>
     <string name="pet_item_glasses">Gafas Inteligentes</string>
     <string name="pet_item_ball">Pelota de Juguete</string>
@@ -142,19 +180,28 @@
     <string name="task_empty_dishwasher">Vaciar el Lavavajillas</string>
     <string name="task_water_tomatoes">Regar los Tomates</string>
     <string name="task_fold_laundry">Doblar la Ropa</string>
-    <string name="task_vacuum_living_room">Aspirar el Salón</string>
-    <string name="task_water_plants">Regar las Plantas</string>
     <string name="task_wash_dishes">Lavar los platos</string>
 
-    <!-- Sample data: expenses / bills -->
-    <string name="expense_trader_joes">Trader Joe\'s</string>
-    <string name="expense_vet">Happy Paws Vet</string>
-    <string name="expense_electric">City Electric</string>
-    <string name="bill_electricity">Electricidad</string>
-    <string name="bill_internet">Internet</string>
-    <string name="date_yesterday">Ayer</string>
-    <string name="date_mon_12">Lun, 12</string>
-    <string name="date_sun_11">Dom, 11</string>
-
-    <string name="savings_goal_disneyland">Fondo para Disneyland</string>
+    <!-- About -->
+    <string name="more_about_title">Acerca de HogarGo</string>
+    <string name="more_about_subtitle">Descripción de la app y créditos del equipo</string>
+    <string name="about_title">Acerca de</string>
+    <string name="about_version">Versión %1$s</string>
+    <string name="about_description">HogarGo convierte las tareas del hogar y las finanzas familiares en un juego en equipo. Cada integrante suma tareas completadas, cuida a Zori, el zorro mascota, y juntos alcanzan sus metas de ahorro.</string>
+    <string name="about_features_title">¿Qué puedes hacer?</string>
+    <string name="about_feature_tasks_title">Tareas y racha</string>
+    <string name="about_feature_tasks_body">Reparte tareas, complétalas para ganar monedas y mantén tu racha diaria.</string>
+    <string name="about_feature_finance_title">Finanzas</string>
+    <string name="about_feature_finance_body">Registra gastos por categoría y crea varias metas de ahorro para la familia.</string>
+    <string name="about_feature_pet_title">Mascota Zori</string>
+    <string name="about_feature_pet_body">Aliméntalo, juega con él y compra decoraciones con tus monedas.</string>
+    <string name="about_feature_calendar_title">Calendario</string>
+    <string name="about_feature_calendar_body">Organiza eventos y no olvides las fechas de pago de tus cuentas.</string>
+    <string name="about_credits_title">Créditos</string>
+    <string name="about_credits_intro">Proyecto desarrollado por los estudiantes:</string>
+    <string name="about_student_nelson">Nelson López</string>
+    <string name="about_student_nelson_role">Finanzas, Mascota y Calendario</string>
+    <string name="about_student_jhonatan">Jhonatan Palacios</string>
+    <string name="about_student_jhonatan_role">Tareas, Inicio y notificaciones</string>
+    <string name="about_footer">Hecho con ❤️ para el curso de Aplicaciones Móviles.</string>
 </resources>

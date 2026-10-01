@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hogargo.app.data.AppViewModel
 import com.hogargo.app.data.notification.StreakNotificationHelper
+import com.hogargo.app.data.notification.StreakReminderWorker
 import com.hogargo.app.ui.navigation.HogarGoApp
 import com.hogargo.app.ui.theme.HogarGoTheme
 
@@ -22,6 +23,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         StreakNotificationHelper.createNotificationChannel(this)
+        StreakReminderWorker.schedule(this)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
