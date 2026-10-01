@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 data class FinanceUiState(
     val expenses: List<ExpenseEntity> = emptyList(),
@@ -34,8 +35,8 @@ class FinanceViewModel(private val repository: FinanceRepository) : ViewModel() 
         FinanceUiState(expenses = expenses, savingsGoal = goal)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), FinanceUiState())
 
-    fun addExpense(title: String, category: ExpenseCategory, amount: Double) {
-        viewModelScope.launch { repository.addExpense(title, category, amount) }
+    fun addExpense(title: String, category: ExpenseCategory, amount: Double, date: LocalDate = LocalDate.now()) {
+        viewModelScope.launch { repository.addExpense(title, category, amount, date) }
     }
 
     fun deleteExpense(expense: ExpenseEntity) {

@@ -24,7 +24,7 @@ val InitialTasks = listOf(
         id = "water_tomatoes",
         titleRes = R.string.task_water_tomatoes,
         category = TaskCategory.GARDEN,
-        completed = true,
+        completed = false,
         assigneeId = "mom",
         coinReward = 20,
     ),

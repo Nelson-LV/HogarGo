@@ -11,6 +11,7 @@ enum class ExpenseCategory(@StringRes val labelRes: Int) {
     BILLS(R.string.expense_category_bills),
     PET(R.string.expense_category_pet),
     LEISURE(R.string.expense_category_leisure),
+    OTHER(R.string.expense_category_other),
 }
 
 @Entity(tableName = "expenses")

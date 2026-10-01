@@ -3,7 +3,6 @@ package com.hogargo.app.ui.tasks
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,6 +42,7 @@ import com.hogargo.app.R
 import com.hogargo.app.data.AppViewModel
 import com.hogargo.app.data.HouseTask
 import com.hogargo.app.data.familyMember
+import com.hogargo.app.data.getDisplayTitle
 import com.hogargo.app.ui.theme.BrandBrownStrong
 import com.hogargo.app.ui.theme.BrandOrange
 
@@ -65,7 +65,7 @@ fun TasksScreen(appViewModel: AppViewModel, onProposeNewTask: () -> Unit) {
         )
         Box(Modifier.size(16.dp))
 
-        StreakBanner()
+        StreakBanner(streakDays = uiState.streakDays)
 
         Box(Modifier.size(16.dp))
 
@@ -92,7 +92,7 @@ fun TasksScreen(appViewModel: AppViewModel, onProposeNewTask: () -> Unit) {
 }
 
 @Composable
-private fun StreakBanner() {
+private fun StreakBanner(streakDays: Int) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -118,7 +118,7 @@ private fun StreakBanner() {
                 color = BrandBrownStrong,
             )
             Text(
-                text = stringResource(R.string.tasks_streak_value, 4),
+                text = stringResource(R.string.tasks_streak_value, streakDays),
                 style = MaterialTheme.typography.titleLarge,
                 color = BrandBrownStrong,
             )
@@ -152,15 +152,16 @@ private fun TaskCard(task: HouseTask, onToggle: () -> Unit) {
                 Checkbox(checked = task.completed, onCheckedChange = { onToggle() })
                 Column(modifier = Modifier.weight(1f).padding(start = 4.dp)) {
                     Text(
-                        text = stringResource(task.titleRes),
+                        text = task.getDisplayTitle(),
                         style = MaterialTheme.typography.titleLarge,
                         textDecoration = if (task.completed) TextDecoration.LineThrough else null,
                         color = if (task.completed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                     )
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        if (task.completed && assignee != null) {
+                        val assigneeName = assignee?.let { stringResource(it.nameRes) } ?: task.assigneeId
+                        if (task.completed && assigneeName != null) {
                             Text(
-                                text = stringResource(R.string.tasks_completed_by, stringResource(assignee.nameRes)),
+                                text = stringResource(R.string.tasks_completed_by, assigneeName),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -197,6 +198,22 @@ private fun TaskCard(task: HouseTask, onToggle: () -> Unit) {
                                 .border(2.dp, MaterialTheme.colorScheme.surfaceContainerHighest, CircleShape)
                                 .alpha(if (task.completed) 0.7f else 1f),
                         )
+                    } else if (!task.assigneeId.isNullOrBlank()) {
+                        Box(Modifier.size(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer)
+                                .alpha(if (task.completed) 0.7f else 1f),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = task.assigneeId.take(1).uppercase(),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            )
+                        }
                     }
                 }
             }

@@ -22,6 +22,7 @@ import androidx.compose.material.icons.automirrored.outlined.TrendingDown
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.Pets
 import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.outlined.Savings
@@ -30,6 +31,9 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -38,6 +42,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -61,6 +66,9 @@ import com.hogargo.app.data.local.ExpenseEntity
 import com.hogargo.app.data.local.SavingsGoalEntity
 import com.hogargo.app.ui.theme.BrandOrange
 import com.hogargo.app.ui.theme.BrandOrangeDeep
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -119,8 +127,8 @@ fun FinanceScreen(viewModel: FinanceViewModel) {
     if (showAddExpense) {
         AddExpenseDialog(
             onDismiss = { showAddExpense = false },
-            onConfirm = { title, category, amount ->
-                viewModel.addExpense(title, category, amount)
+            onConfirm = { title, category, amount, date ->
+                viewModel.addExpense(title, category, amount, date)
                 showAddExpense = false
             },
         )
@@ -150,6 +158,7 @@ private fun categoryColor(category: ExpenseCategory): Color = when (category) {
     ExpenseCategory.BILLS -> Color(0xFF904917)
     ExpenseCategory.PET -> Color(0xFFFEAC67)
     ExpenseCategory.LEISURE -> Color(0xFFFFDBC9)
+    ExpenseCategory.OTHER -> Color(0xFFE4E3DB)
 }
 
 private fun categoryIcon(category: ExpenseCategory): ImageVector = when (category) {
@@ -157,6 +166,7 @@ private fun categoryIcon(category: ExpenseCategory): ImageVector = when (categor
     ExpenseCategory.BILLS -> Icons.Outlined.Bolt
     ExpenseCategory.PET -> Icons.Outlined.Pets
     ExpenseCategory.LEISURE -> Icons.Outlined.Restaurant
+    ExpenseCategory.OTHER -> Icons.Outlined.MoreHoriz
 }
 
 @Composable
@@ -351,15 +361,21 @@ private fun ExpenseRow(expense: ExpenseEntity, onDelete: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, ExpenseCategory, Double) -> Unit) {
+private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, ExpenseCategory, Double, LocalDate) -> Unit) {
     var title by rememberSaveable { mutableStateOf("") }
     var category by rememberSaveable { mutableStateOf(ExpenseCategory.GROCERIES) }
     var amountText by rememberSaveable { mutableStateOf("") }
+    var date by rememberSaveable { mutableStateOf(LocalDate.now()) }
+    var showDatePicker by rememberSaveable { mutableStateOf(false) }
     var error by rememberSaveable { mutableStateOf<String?>(null) }
 
     val titleEmptyError = stringResource(R.string.finance_error_empty_title)
     val amountInvalidError = stringResource(R.string.finance_error_invalid_amount)
+    val formatter = remember(Locale.getDefault()) {
+        DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault())
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -395,6 +411,17 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, ExpenseC
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
                 )
+                Box(Modifier.size(12.dp))
+                OutlinedTextField(
+                    value = date.format(formatter),
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.calendar_bill_due_date_label)) },
+                    trailingIcon = {
+                        TextButton(onClick = { showDatePicker = true }) { Text(stringResource(R.string.calendar_change_date)) }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
                 if (error != null) {
                     Text(error!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
                 }
@@ -409,7 +436,7 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, ExpenseC
                     else -> null
                 }
                 if (error == null && amount != null) {
-                    onConfirm(title.trim(), category, amount)
+                    onConfirm(title.trim(), category, amount, date)
                 }
             }) {
                 Text(stringResource(R.string.finance_add_button))
@@ -419,6 +446,28 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, ExpenseC
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.finance_cancel_button)) }
         },
     )
+
+    if (showDatePicker) {
+        val state = rememberDatePickerState(
+            initialSelectedDateMillis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    state.selectedDateMillis?.let { millis ->
+                        date = Instant.ofEpochMilli(millis).atZone(ZoneId.of("UTC")).toLocalDate()
+                    }
+                    showDatePicker = false
+                }) { Text(stringResource(R.string.finance_add_button)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.finance_cancel_button)) }
+            },
+        ) {
+            DatePicker(state = state)
+        }
+    }
 }
 
 @Composable

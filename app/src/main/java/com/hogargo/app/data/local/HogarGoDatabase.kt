@@ -18,8 +18,10 @@ import androidx.room.TypeConverters
         PetStateEntity::class,
         WardrobeItemEntity::class,
         BillEntity::class,
+        TaskEntity::class,
+        EventEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -29,6 +31,8 @@ abstract class HogarGoDatabase : RoomDatabase() {
     abstract fun petStateDao(): PetStateDao
     abstract fun wardrobeItemDao(): WardrobeItemDao
     abstract fun billDao(): BillDao
+    abstract fun taskDao(): TaskDao
+    abstract fun eventDao(): EventDao
 
     companion object {
         @Volatile

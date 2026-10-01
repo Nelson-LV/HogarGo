@@ -53,9 +53,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.hogargo.app.R
 import com.hogargo.app.data.local.BillEntity
+import com.hogargo.app.data.local.EventEntity
 import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
@@ -69,6 +71,7 @@ fun CalendarScreen(viewModel: CalendarViewModel) {
     val today = LocalDate.now()
     val shownMonth = YearMonth.from(today).plusMonths(monthOffset.toLong())
     val bills by viewModel.bills.collectAsState()
+    val events by viewModel.events.collectAsState()
     var showAddBill by rememberSaveable { mutableStateOf(false) }
 
     Column(
@@ -101,6 +104,9 @@ fun CalendarScreen(viewModel: CalendarViewModel) {
             onPrev = { monthOffset -= 1 },
             onNext = { monthOffset += 1 },
         )
+
+        Box(Modifier.size(20.dp))
+        UpcomingChoresCard(events = events, onToggleDone = viewModel::toggleEventDone)
 
         Box(Modifier.size(20.dp))
         BillsCard(bills = bills, onAddBill = { showAddBill = true }, onTogglePaid = viewModel::togglePaid, onDelete = viewModel::deleteBill)
@@ -220,6 +226,49 @@ private fun DayCell(day: Int?, selected: Boolean, dots: List<Color>, modifier: M
 }
 
 @Composable
+private fun UpcomingChoresCard(events: List<EventEntity>, onToggleDone: (String, Boolean) -> Unit) {
+    Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Column(Modifier.padding(24.dp)) {
+            Text(
+                stringResource(R.string.calendar_upcoming_tasks),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Box(Modifier.size(12.dp))
+            if (events.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.calendar_events_empty),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 8.dp),
+                )
+            } else {
+                events.forEach { event ->
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 6.dp)) {
+                        Checkbox(
+                            checked = event.done,
+                            onCheckedChange = { onToggleDone(event.id, event.done) },
+                        )
+                        Column(Modifier.padding(start = 8.dp)) {
+                            Text(
+                                text = event.title,
+                                style = MaterialTheme.typography.titleMedium,
+                                textDecoration = if (event.done) TextDecoration.LineThrough else null,
+                            )
+                            Text(
+                                text = event.dateLabel,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun BillsCard(bills: List<BillEntity>, onAddBill: () -> Unit, onTogglePaid: (BillEntity) -> Unit, onDelete: (BillEntity) -> Unit) {
     Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {
         Column(Modifier.padding(24.dp)) {
@@ -268,7 +317,7 @@ private fun BillRow(bill: BillEntity, onTogglePaid: () -> Unit, onDelete: () -> 
             Text(
                 bill.title,
                 style = MaterialTheme.typography.titleMedium,
-                textDecoration = if (bill.paid) androidx.compose.ui.text.style.TextDecoration.LineThrough else null,
+                textDecoration = if (bill.paid) TextDecoration.LineThrough else null,
             )
             if (overdue) {
                 Text(stringResource(R.string.calendar_due_today), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.error)
@@ -381,4 +430,3 @@ private fun stringArrayResource(id: Int): Array<String> {
     val context = LocalContext.current
     return context.resources.getStringArray(id)
 }
-
