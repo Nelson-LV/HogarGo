@@ -75,6 +75,7 @@
     <!-- Finance: add expense dialog -->
     <string name="finance_expense_name_label">Description</string>
     <string name="finance_expense_name_hint">E.g.: Groceries</string>
+    <string name="finance_expense_category_label">Category</string>
     <string name="finance_expense_amount_label">Amount</string>
     <string name="finance_add_button">Add</string>
     <string name="finance_cancel_button">Cancel</string>

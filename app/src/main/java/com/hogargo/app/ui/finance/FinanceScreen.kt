@@ -6,6 +6,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,6 +36,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -361,7 +364,7 @@ private fun ExpenseRow(expense: ExpenseEntity, onDelete: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, ExpenseCategory, Double, LocalDate) -> Unit) {
     var title by rememberSaveable { mutableStateOf("") }
@@ -381,7 +384,19 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, ExpenseC
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.finance_new_expense)) },
         text = {
-            Column {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                OutlinedTextField(
+                    value = amountText,
+                    onValueChange = { input -> amountText = input.filter { it.isDigit() || it == '.' || it == ',' }.take(12) },
+                    label = { Text(stringResource(R.string.finance_expense_amount_label)) },
+                    placeholder = { Text("0.00") },
+                    prefix = { Text("$") },
+                    textStyle = MaterialTheme.typography.headlineSmall,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Box(Modifier.size(12.dp))
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
@@ -390,27 +405,28 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, ExpenseC
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Box(Modifier.size(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(Modifier.size(16.dp))
+                Text(
+                    stringResource(R.string.finance_expense_category_label),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Box(Modifier.size(8.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
                     ExpenseCategory.entries.forEach { c ->
-                        CategoryChip(
-                            label = stringResource(c.labelRes),
+                        FilterChip(
                             selected = c == category,
                             onClick = { category = c },
-                            modifier = Modifier.weight(1f),
+                            label = { Text(stringResource(c.labelRes)) },
+                            leadingIcon = {
+                                Icon(categoryIcon(c), contentDescription = null, modifier = Modifier.size(18.dp))
+                            },
                         )
                     }
                 }
-                Box(Modifier.size(12.dp))
-                OutlinedTextField(
-                    value = amountText,
-                    onValueChange = { amountText = it },
-                    label = { Text(stringResource(R.string.finance_expense_amount_label)) },
-                    placeholder = { Text("0.00") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth(),
-                )
                 Box(Modifier.size(12.dp))
                 OutlinedTextField(
                     value = date.format(formatter),
@@ -429,7 +445,7 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, ExpenseC
         },
         confirmButton = {
             TextButton(onClick = {
-                val amount = amountText.toDoubleOrNull()
+                val amount = amountText.replace(',', '.').toDoubleOrNull()
                 error = when {
                     title.isBlank() -> titleEmptyError
                     amount == null || amount <= 0.0 -> amountInvalidError
@@ -449,7 +465,7 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, ExpenseC
 
     if (showDatePicker) {
         val state = rememberDatePickerState(
-            initialSelectedDateMillis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+            initialSelectedDateMillis = date.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli(),
         )
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
@@ -568,24 +584,4 @@ private fun ContributeDialog(onDismiss: () -> Unit, onConfirm: (Double) -> Unit)
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.finance_cancel_button)) }
         },
     )
-}
-
-@Composable
-private fun CategoryChip(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
-            .clickable(onClick = onClick)
-            .padding(vertical = 8.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            fontWeight = if (selected) FontWeight.Bold else null,
-        )
-    }
 }
