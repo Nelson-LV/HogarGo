@@ -31,6 +31,7 @@ import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.LocalFireDepartment
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.Pets
@@ -98,6 +99,7 @@ fun HomeScreen(
     onNewTask: () -> Unit,
     onOpenFinance: () -> Unit = {},
     onOpenPet: () -> Unit = {},
+    onOpenAbout: () -> Unit = {},
 ) {
     val application = LocalContext.current.applicationContext as HogarGoApplication
     val financeViewModel: FinanceViewModel = viewModel(factory = FinanceViewModel.factory(application.financeRepository))
@@ -132,7 +134,10 @@ fun HomeScreen(
 
     if (showMoreBottomSheet) {
         MoreBottomSheet(
-            petViewModel = petViewModel,
+            onOpenAbout = {
+                showMoreBottomSheet = false
+                onOpenAbout()
+            },
             onDismiss = { showMoreBottomSheet = false },
         )
     }
@@ -206,10 +211,9 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MoreBottomSheet(
-    petViewModel: PetViewModel,
+    onOpenAbout: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val context = LocalContext.current
     var showMembersDialog by rememberSaveable { mutableStateOf(false) }
 
     if (showMembersDialog) {
@@ -237,14 +241,10 @@ private fun MoreBottomSheet(
             Box(Modifier.height(4.dp))
 
             MoreOptionRow(
-                icon = Icons.Outlined.Pets,
-                title = "Alimentar Mascota (Zori)",
-                subtitle = "Dale de comer a Zori para aumentar su saciedad",
-                onClick = {
-                    petViewModel.feed()
-                    Toast.makeText(context, "🍎 ¡Has alimentado a Zori!", Toast.LENGTH_SHORT).show()
-                    onDismiss()
-                },
+                icon = Icons.Outlined.Info,
+                title = stringResource(R.string.more_about_title),
+                subtitle = stringResource(R.string.more_about_subtitle),
+                onClick = onOpenAbout,
             )
 
             MoreOptionRow(

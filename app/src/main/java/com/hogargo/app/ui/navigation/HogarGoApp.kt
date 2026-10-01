@@ -23,6 +23,7 @@ import androidx.navigation.compose.rememberNavController
 import com.hogargo.app.HogarGoApplication
 import com.hogargo.app.R
 import com.hogargo.app.data.AppViewModel
+import com.hogargo.app.ui.about.AboutScreen
 import com.hogargo.app.ui.calendar.CalendarScreen
 import com.hogargo.app.ui.calendar.CalendarViewModel
 import com.hogargo.app.ui.finance.FinanceScreen
@@ -51,6 +52,11 @@ fun HogarGoApp(appViewModel: AppViewModel = viewModel()) {
                     title = stringResource(R.string.new_task_title),
                     onBack = { navController.popBackStack() },
                 )
+            } else if (currentRoute?.route == Routes.ABOUT) {
+                HogarGoDetailTopBar(
+                    title = stringResource(R.string.about_title),
+                    onBack = { navController.popBackStack() },
+                )
             } else {
                 HogarGoTopBar()
             }
@@ -76,6 +82,7 @@ fun HogarGoApp(appViewModel: AppViewModel = viewModel()) {
                     onNewTask = { navController.navigate(Routes.NEW_TASK) },
                     onOpenFinance = { navController.navigateToTab(Routes.FINANCE) },
                     onOpenPet = { navController.navigateToTab(Routes.PET) },
+                    onOpenAbout = { navController.navigate(Routes.ABOUT) },
                 )
             }
             composable(Routes.TASKS) {
@@ -89,6 +96,9 @@ fun HogarGoApp(appViewModel: AppViewModel = viewModel()) {
                     appViewModel = appViewModel,
                     onBack = { navController.popBackStack() },
                 )
+            }
+            composable(Routes.ABOUT) {
+                AboutScreen()
             }
             composable(Routes.FINANCE) {
                 val financeViewModel: FinanceViewModel = viewModel(factory = FinanceViewModel.factory(application.financeRepository))

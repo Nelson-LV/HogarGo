@@ -15,7 +15,7 @@ import androidx.compose.material.icons.outlined.Savings
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.hogargo.app.R
 
-/** Routes used by the NavHost. NEW_TASK has no bottom-nav entry (opened on top of Home/Tasks). */
+/** Routes used by the NavHost. NEW_TASK and ABOUT have no bottom-nav entry (opened on top of Home/Tasks). */
 object Routes {
     const val HOME = "home"
     const val TASKS = "tasks"
@@ -23,6 +23,7 @@ object Routes {
     const val PET = "pet"
     const val CALENDAR = "calendar"
     const val NEW_TASK = "new_task"
+    const val ABOUT = "about"
 }
 
 data class BottomNavDestination(

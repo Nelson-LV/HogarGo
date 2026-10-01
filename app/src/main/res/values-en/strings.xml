@@ -181,4 +181,27 @@
     <string name="task_water_tomatoes">Water the Tomatoes</string>
     <string name="task_fold_laundry">Fold the Laundry</string>
     <string name="task_wash_dishes">Wash the dishes</string>
+
+    <!-- About -->
+    <string name="more_about_title">About HogarGo</string>
+    <string name="more_about_subtitle">App description and team credits</string>
+    <string name="about_title">About</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_description">HogarGo turns household chores and family finances into a team game. Everyone adds completed tasks, takes care of Zori, the fox pet, and together you reach your savings goals.</string>
+    <string name="about_features_title">What can you do?</string>
+    <string name="about_feature_tasks_title">Tasks and streak</string>
+    <string name="about_feature_tasks_body">Share chores, complete them to earn coins and keep your daily streak.</string>
+    <string name="about_feature_finance_title">Finance</string>
+    <string name="about_feature_finance_body">Log expenses by category and create several savings goals for the family.</string>
+    <string name="about_feature_pet_title">Pet Zori</string>
+    <string name="about_feature_pet_body">Feed and play with Zori, and buy decorations with your coins.</string>
+    <string name="about_feature_calendar_title">Calendar</string>
+    <string name="about_feature_calendar_body">Plan events and never miss a bill due date.</string>
+    <string name="about_credits_title">Credits</string>
+    <string name="about_credits_intro">Project developed by the students:</string>
+    <string name="about_student_nelson">Nelson López</string>
+    <string name="about_student_nelson_role">Finance, Pet and Calendar</string>
+    <string name="about_student_jhonatan">Jhonatan Palacios</string>
+    <string name="about_student_jhonatan_role">Tasks, Home and notifications</string>
+    <string name="about_footer">Made with ❤️ for the Mobile Applications course.</string>
 </resources>
