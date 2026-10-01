@@ -16,6 +16,6 @@ class HogarGoApplication : Application() {
     private val database by lazy { HogarGoDatabase.getInstance(this) }
 
     val financeRepository by lazy { FinanceRepository(database.expenseDao(), database.savingsGoalDao()) }
-    val petRepository by lazy { PetRepository(database.petStateDao(), database.wardrobeItemDao()) }
+    val petRepository by lazy { PetRepository(database.petStateDao(), database.wardrobeItemDao(), database.taskDao()) }
     val calendarRepository by lazy { CalendarRepository(database.billDao(), database.eventDao()) }
 }

@@ -87,6 +87,9 @@ fun PetScreen(viewModel: PetViewModel) {
         WardrobeCard(
             level = petState?.level ?: 1,
             equippedIds = equippedIds,
+            coins = uiState.coins,
+            ownedIds = uiState.wardrobe.filter { it.owned }.map { it.id }.toSet(),
+            onBuy = viewModel::buy,
             onToggle = viewModel::toggleEquip,
             modifier = Modifier.bringIntoViewRequester(wardrobeRequester),
         )
@@ -199,15 +202,23 @@ private fun StatBar(label: String, value: Float, color: androidx.compose.ui.grap
 }
 
 @Composable
-private fun WardrobeCard(level: Int, equippedIds: Set<String>, onToggle: (String) -> Unit, modifier: Modifier = Modifier) {
+private fun WardrobeCard(
+    level: Int,
+    equippedIds: Set<String>,
+    ownedIds: Set<String>,
+    coins: Int,
+    onBuy: (String) -> Unit,
+    onToggle: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Card(modifier = modifier, shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(Modifier.padding(24.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(stringResource(R.string.pet_wardrobe_title), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
                 Text(
-                    "${equippedIds.size}/${WardrobeCatalog.size}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    stringResource(R.string.pet_coins_balance, coins),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = BrandOrangeDeep,
                 )
             }
             Text(
@@ -223,7 +234,10 @@ private fun WardrobeCard(level: Int, equippedIds: Set<String>, onToggle: (String
                             WardrobeItemCard(
                                 item = catalogItem,
                                 unlocked = level >= catalogItem.unlockLevel,
+                                owned = catalogItem.id in ownedIds,
                                 equipped = catalogItem.id in equippedIds,
+                                canAfford = coins >= catalogItem.price,
+                                onBuy = { onBuy(catalogItem.id) },
                                 onToggle = { onToggle(catalogItem.id) },
                                 modifier = Modifier.weight(1f),
                             )
@@ -240,7 +254,10 @@ private fun WardrobeCard(level: Int, equippedIds: Set<String>, onToggle: (String
 private fun WardrobeItemCard(
     item: WardrobeCatalogItem,
     unlocked: Boolean,
+    owned: Boolean,
     equipped: Boolean,
+    canAfford: Boolean,
+    onBuy: () -> Unit,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -309,6 +326,15 @@ private fun WardrobeItemCard(
                 ) {
                     Text(stringResource(R.string.pet_remove), style = MaterialTheme.typography.labelMedium)
                 }
+            }
+            !owned -> Button(
+                onClick = onBuy,
+                enabled = canAfford,
+                colors = ButtonDefaults.buttonColors(containerColor = BrandOrangeDeep),
+                shape = RoundedCornerShape(50),
+                contentPadding = PaddingValues(vertical = 4.dp, horizontal = 12.dp),
+            ) {
+                Text(stringResource(R.string.pet_buy, item.price), style = MaterialTheme.typography.labelMedium)
             }
             else -> Button(
                 onClick = onToggle,

@@ -8,4 +8,6 @@ import androidx.room.PrimaryKey
 data class WardrobeItemEntity(
     @PrimaryKey val id: String,
     val equipped: Boolean = false,
+    /** Bought with Zori coins; items must be owned before they can be worn. */
+    val owned: Boolean = false,
 )

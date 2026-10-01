@@ -5,6 +5,8 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 /**
  * Single shared Room database for the app. Each teammate's feature adds its own
@@ -21,7 +23,7 @@ import androidx.room.TypeConverters
         TaskEntity::class,
         EventEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -35,6 +37,14 @@ abstract class HogarGoDatabase : RoomDatabase() {
     abstract fun eventDao(): EventDao
 
     companion object {
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE wardrobe_items ADD COLUMN owned INTEGER NOT NULL DEFAULT 0")
+                // Items already worn before the shop existed stay owned.
+                db.execSQL("UPDATE wardrobe_items SET owned = equipped")
+            }
+        }
+
         @Volatile
         private var instance: HogarGoDatabase? = null
 
@@ -45,6 +55,7 @@ abstract class HogarGoDatabase : RoomDatabase() {
                     HogarGoDatabase::class.java,
                     "hogargo.db",
                 )
+                    .addMigrations(MIGRATION_4_5)
                     // Pre-release schema: destroy & recreate on bump instead of writing migrations.
                     .fallbackToDestructiveMigration(dropAllTables = true)
                     .build().also { instance = it }

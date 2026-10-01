@@ -148,8 +148,10 @@
     <string name="pet_happiness">Felicidad</string>
     <string name="pet_satiety">Saciedad</string>
     <string name="pet_wardrobe_title">Armario</string>
-    <string name="pet_wardrobe_subtitle">¡Cuida a Zori para subir de nivel y desbloquear nuevos objetos!</string>
+    <string name="pet_wardrobe_subtitle">¡Cuida a Zori para subir de nivel y gana monedas con tareas para comprar nuevos objetos!</string>
     <string name="pet_wear">Poner</string>
+    <string name="pet_buy">Comprar · %1$d 🪙</string>
+    <string name="pet_coins_balance">🪙 %1$d</string>
     <string name="pet_remove">Quitar</string>
     <string name="pet_equipped_badge">Puesto</string>
     <string name="pet_wearing">Zori lleva puesto:</string>

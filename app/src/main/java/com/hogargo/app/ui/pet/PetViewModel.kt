@@ -18,12 +18,13 @@ import kotlinx.coroutines.launch
 data class PetUiState(
     val petState: PetStateEntity? = null,
     val wardrobe: List<WardrobeItemEntity> = emptyList(),
+    val coins: Int = 0,
 )
 
 class PetViewModel(private val repository: PetRepository) : ViewModel() {
 
-    val uiState: StateFlow<PetUiState> = combine(repository.petState, repository.wardrobeItems) { pet, wardrobe ->
-        PetUiState(petState = pet, wardrobe = wardrobe)
+    val uiState: StateFlow<PetUiState> = combine(repository.petState, repository.wardrobeItems, repository.coins) { pet, wardrobe, coins ->
+        PetUiState(petState = pet, wardrobe = wardrobe, coins = coins)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PetUiState())
 
     private val _feedCooldownMs = MutableStateFlow(0L)
@@ -57,6 +58,10 @@ class PetViewModel(private val repository: PetRepository) : ViewModel() {
             CareAction.FEED -> _feedCooldownMs.value = remaining
             CareAction.PLAY -> _playCooldownMs.value = remaining
         }
+    }
+
+    fun buy(itemId: String) {
+        viewModelScope.launch { repository.buy(itemId) }
     }
 
     fun toggleEquip(itemId: String) {

@@ -1,10 +1,13 @@
 package com.hogargo.app.data.pet
 
 import com.hogargo.app.data.local.PetStateDao
+import com.hogargo.app.data.local.TaskDao
 import com.hogargo.app.data.local.PetStateEntity
 import com.hogargo.app.data.local.WardrobeItemDao
 import com.hogargo.app.data.local.WardrobeItemEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 
 private const val DECAY_INTERVAL_MILLIS = 2 * 60 * 60 * 1000L // 2 hours
 private const val DECAY_AMOUNT = 0.05f
@@ -17,10 +20,16 @@ enum class CareAction { FEED, PLAY }
 class PetRepository(
     private val petStateDao: PetStateDao,
     private val wardrobeItemDao: WardrobeItemDao,
+    private val taskDao: TaskDao,
     private val now: () -> Long = System::currentTimeMillis,
 ) {
     val petState: Flow<PetStateEntity?> = petStateDao.observe()
     val wardrobeItems: Flow<List<WardrobeItemEntity>> = wardrobeItemDao.observeAll()
+
+    /** Coins earned from completed tasks minus the price of owned wardrobe items. */
+    val coins: Flow<Int> = combine(taskDao.getAllTasks(), wardrobeItemDao.observeAll()) { tasks, items ->
+        computeCoins(tasks.filter { it.completed }.sumOf { it.coinReward }, items)
+    }
 
     /** Call once when the screen opens: seeds default rows and applies any pending time-based decay. */
     suspend fun refreshOnOpen() {
@@ -64,8 +73,27 @@ class PetRepository(
         val level = petStateDao.getOnce()?.level ?: 1
         if (level < catalogEntry.unlockLevel) return
 
+        if (wardrobeItemDao.getOnce(itemId)?.owned != true) return
+
         val currentlyEquipped = wardrobeItemDao.getOnce(itemId)?.equipped ?: false
-        wardrobeItemDao.upsert(WardrobeItemEntity(id = itemId, equipped = !currentlyEquipped))
+        wardrobeItemDao.upsert(WardrobeItemEntity(id = itemId, equipped = !currentlyEquipped, owned = true))
+    }
+
+    /** Buys [itemId] if the level is high enough and the balance covers the price. Returns true on success. */
+    suspend fun buy(itemId: String): Boolean {
+        val catalogEntry = WardrobeCatalog.find { it.id == itemId } ?: return false
+        val level = petStateDao.getOnce()?.level ?: 1
+        if (level < catalogEntry.unlockLevel) return false
+        if (wardrobeItemDao.getOnce(itemId)?.owned == true) return false
+        if (coins.first() < catalogEntry.price) return false
+
+        wardrobeItemDao.upsert(WardrobeItemEntity(id = itemId, equipped = false, owned = true))
+        return true
+    }
+
+    private fun computeCoins(earned: Int, items: List<WardrobeItemEntity>): Int {
+        val spent = items.filter { it.owned }.sumOf { item -> WardrobeCatalog.find { it.id == item.id }?.price ?: 0 }
+        return (earned - spent).coerceAtLeast(0)
     }
 
     private fun applyDecay(state: PetStateEntity): PetStateEntity {

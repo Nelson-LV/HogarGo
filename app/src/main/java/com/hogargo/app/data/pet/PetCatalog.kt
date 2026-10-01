@@ -9,11 +9,12 @@ data class WardrobeCatalogItem(
     @StringRes val nameRes: Int,
     val emoji: String,
     val unlockLevel: Int,
+    val price: Int,
 )
 
 val WardrobeCatalog = listOf(
-    WardrobeCatalogItem("scarf", R.string.pet_item_scarf, "\uD83E\uDDE3", unlockLevel = 1),
-    WardrobeCatalogItem("ball", R.string.pet_item_ball, "\u26BD", unlockLevel = 1),
-    WardrobeCatalogItem("glasses", R.string.pet_item_glasses, "\uD83D\uDD76\uFE0F", unlockLevel = 3),
-    WardrobeCatalogItem("skateboard", R.string.pet_item_skateboard, "\uD83D\uDEF9", unlockLevel = 5),
+    WardrobeCatalogItem("scarf", R.string.pet_item_scarf, "\uD83E\uDDE3", unlockLevel = 1, price = 20),
+    WardrobeCatalogItem("ball", R.string.pet_item_ball, "\u26BD", unlockLevel = 1, price = 30),
+    WardrobeCatalogItem("glasses", R.string.pet_item_glasses, "\uD83D\uDD76\uFE0F", unlockLevel = 3, price = 60),
+    WardrobeCatalogItem("skateboard", R.string.pet_item_skateboard, "\uD83D\uDEF9", unlockLevel = 5, price = 100),
 )

@@ -148,8 +148,10 @@
     <string name="pet_happiness">Happiness</string>
     <string name="pet_satiety">Fullness</string>
     <string name="pet_wardrobe_title">Wardrobe</string>
-    <string name="pet_wardrobe_subtitle">Take care of Zori to level up and unlock new items!</string>
+    <string name="pet_wardrobe_subtitle">Take care of Zori to level up and earn coins from tasks to buy new items!</string>
     <string name="pet_wear">Wear</string>
+    <string name="pet_buy">Buy · %1$d 🪙</string>
+    <string name="pet_coins_balance">🪙 %1$d</string>
     <string name="pet_remove">Remove</string>
     <string name="pet_equipped_badge">Worn</string>
     <string name="pet_wearing">Zori is wearing:</string>
