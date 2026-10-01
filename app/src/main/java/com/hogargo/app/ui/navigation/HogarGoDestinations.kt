@@ -32,10 +32,11 @@ data class BottomNavDestination(
     val unselectedIcon: ImageVector,
 )
 
+/** Home sits in the middle of the bar; the other four tabs flank it. */
 val BottomNavDestinations = listOf(
-    BottomNavDestination(Routes.HOME, R.string.nav_home, Icons.Filled.Home, Icons.Outlined.Home),
     BottomNavDestination(Routes.TASKS, R.string.nav_tasks, Icons.Filled.Checklist, Icons.Outlined.Checklist),
     BottomNavDestination(Routes.FINANCE, R.string.nav_finance, Icons.Filled.Savings, Icons.Outlined.Savings),
+    BottomNavDestination(Routes.HOME, R.string.nav_home, Icons.Filled.Home, Icons.Outlined.Home),
     BottomNavDestination(Routes.PET, R.string.nav_pet, Icons.Filled.Pets, Icons.Outlined.Pets),
     BottomNavDestination(Routes.CALENDAR, R.string.nav_calendar, Icons.Filled.CalendarMonth, Icons.Outlined.CalendarMonth),
 )

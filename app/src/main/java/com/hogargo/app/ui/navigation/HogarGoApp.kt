@@ -65,6 +65,10 @@ fun HogarGoApp(appViewModel: AppViewModel = viewModel()) {
             navController = navController,
             startDestination = Routes.HOME,
             modifier = Modifier.padding(innerPadding),
+            enterTransition = { hogarGoEnter() },
+            exitTransition = { hogarGoExit() },
+            popEnterTransition = { hogarGoEnter() },
+            popExitTransition = { hogarGoExit() },
         ) {
             composable(Routes.HOME) {
                 HomeScreen(
