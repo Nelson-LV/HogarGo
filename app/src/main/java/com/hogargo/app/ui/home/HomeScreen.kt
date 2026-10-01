@@ -81,6 +81,7 @@ import com.hogargo.app.data.HouseTask
 import com.hogargo.app.data.getDisplayTitle
 import com.hogargo.app.data.local.ExpenseCategory
 import com.hogargo.app.ui.calendar.CalendarViewModel
+import com.hogargo.app.ui.finance.AddExpenseDialog
 import com.hogargo.app.ui.finance.FinanceViewModel
 import com.hogargo.app.ui.pet.PetViewModel
 import com.hogargo.app.ui.pet.ZoriAvatar
@@ -88,23 +89,6 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
-
-private fun mapHomeExpenseCategory(label: String): ExpenseCategory = when (label) {
-    "Supermercado" -> ExpenseCategory.GROCERIES
-    "Servicios" -> ExpenseCategory.BILLS
-    "Mascota" -> ExpenseCategory.PET
-    "Ocio" -> ExpenseCategory.LEISURE
-    else -> ExpenseCategory.OTHER
-}
-
-private fun parseHomeExpenseDate(dateLabel: String, todayLabel: String): java.time.LocalDate =
-    if (dateLabel == todayLabel) {
-        java.time.LocalDate.now()
-    } else {
-        runCatching {
-            java.time.LocalDate.parse(dateLabel, java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-        }.getOrDefault(java.time.LocalDate.now())
-    }
 
 @Composable
 fun HomeScreen(
@@ -125,8 +109,6 @@ fun HomeScreen(
     var showNewExpenseDialog by rememberSaveable { mutableStateOf(false) }
     var showMoreBottomSheet by rememberSaveable { mutableStateOf(false) }
 
-    val todayLabel = stringResource(R.string.new_task_today)
-
     if (showNewEventDialog) {
         NewEventDialog(
             onDismiss = { showNewEventDialog = false },
@@ -137,15 +119,11 @@ fun HomeScreen(
     }
 
     if (showNewExpenseDialog) {
-        NewExpenseDialog(
+        AddExpenseDialog(
             onDismiss = { showNewExpenseDialog = false },
-            onSave = { merchant, category, amount, dateLabel ->
-                financeViewModel.addExpense(
-                    title = merchant,
-                    category = mapHomeExpenseCategory(category),
-                    amount = amount,
-                    date = parseHomeExpenseDate(dateLabel, todayLabel),
-                )
+            onConfirm = { title, category, amount, date ->
+                financeViewModel.addExpense(title, category, amount, date)
+                showNewExpenseDialog = false
             },
         )
     }
@@ -354,134 +332,6 @@ private fun HouseholdMembersDialog(onDismiss: () -> Unit) {
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text(stringResource(android.R.string.ok))
-            }
-        },
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun NewExpenseDialog(
-    onDismiss: () -> Unit,
-    onSave: (merchant: String, category: String, amount: Double, dateLabel: String) -> Unit,
-) {
-    val context = LocalContext.current
-    var merchant by rememberSaveable { mutableStateOf("") }
-    var category by rememberSaveable { mutableStateOf("Supermercado") }
-    var amountText by rememberSaveable { mutableStateOf("") }
-    var expenseDateLabel by rememberSaveable { mutableStateOf(context.getString(R.string.new_task_today)) }
-
-    var showDatePicker by rememberSaveable { mutableStateOf(false) }
-
-    val categories = listOf("Supermercado", "Servicios", "Mascota", "Ocio", "Otros")
-    val categoryScrollState = rememberScrollState()
-
-    if (showDatePicker) {
-        val datePickerState = rememberDatePickerState()
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        val cal = Calendar.getInstance().apply {
-                            timeInMillis = millis + TimeZone.getDefault().getOffset(millis)
-                        }
-                        val today = Calendar.getInstance()
-                        val isToday = (cal[Calendar.YEAR] == today[Calendar.YEAR]) && (cal[Calendar.DAY_OF_YEAR] == today[Calendar.DAY_OF_YEAR])
-                        expenseDateLabel = if (isToday) context.getString(R.string.new_task_today) else SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(cal.time)
-                    }
-                    showDatePicker = false
-                }) {
-                    Text(stringResource(android.R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text(stringResource(android.R.string.cancel))
-                }
-            },
-        ) {
-            DatePicker(state = datePickerState)
-        }
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.home_quick_add_expense), style = MaterialTheme.typography.titleLarge) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                OutlinedTextField(
-                    value = merchant,
-                    onValueChange = { merchant = it },
-                    label = { Text("Establecimiento / Comercio") },
-                    placeholder = { Text("Ej. Supermercado, Farmacia, Cine") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                )
-                OutlinedTextField(
-                    value = amountText,
-                    onValueChange = { input ->
-                        if (input.isEmpty() || input.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
-                            amountText = input
-                        }
-                    },
-                    label = { Text("Monto ($)") },
-                    placeholder = { Text("0.00") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                )
-                Text("Categoría", style = MaterialTheme.typography.labelLarge)
-                Row(
-                    modifier = Modifier.horizontalScroll(categoryScrollState),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    categories.forEach { cat ->
-                        FilterChip(
-                            selected = category == cat,
-                            onClick = { category = cat },
-                            label = { Text(cat, style = MaterialTheme.typography.labelSmall) },
-                        )
-                    }
-                }
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { showDatePicker = true },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Icon(Icons.Outlined.CalendarToday, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
-                        Text("Fecha: $expenseDateLabel", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val amount = amountText.toDoubleOrNull() ?: 0.0
-                    if (merchant.isNotBlank() && amount > 0.0) {
-                        onSave(merchant.trim(), category, amount, expenseDateLabel)
-                        onDismiss()
-                    }
-                },
-                enabled = merchant.isNotBlank() && (amountText.toDoubleOrNull() ?: 0.0) > 0.0,
-                shape = RoundedCornerShape(12.dp),
-            ) {
-                Text(stringResource(R.string.new_task_create))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(android.R.string.cancel))
             }
         },
     )
@@ -822,49 +672,58 @@ private fun QuickActionsGrid(
         QuickAction(QuickActionType.EVENT, stringResource(R.string.home_quick_event), Icons.Outlined.CalendarMonth),
         QuickAction(QuickActionType.MORE, stringResource(R.string.home_quick_more), Icons.Outlined.MoreHoriz),
     )
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.height(232.dp),
-        contentPadding = PaddingValues(bottom = 8.dp),
-    ) {
-        items(actions) { action ->
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                modifier = Modifier
-                    .aspectRatio(1.6f)
-                    .clickable {
-                        when (action.type) {
-                            QuickActionType.NEW_TASK -> onNewTask()
-                            QuickActionType.ADD_EXPENSE -> onNewExpense()
-                            QuickActionType.EVENT -> onNewEvent()
-                            QuickActionType.MORE -> onMore()
-                        }
-                    },
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        actions.chunked(2).forEach { rowActions ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(action.icon, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
-                    }
-                    Text(
-                        text = action.label,
-                        style = MaterialTheme.typography.labelLarge,
-                        modifier = Modifier.padding(top = 8.dp),
+                rowActions.forEach { action ->
+                    QuickActionCard(
+                        action = action,
+                        onClick = {
+                            when (action.type) {
+                                QuickActionType.NEW_TASK -> onNewTask()
+                                QuickActionType.ADD_EXPENSE -> onNewExpense()
+                                QuickActionType.EVENT -> onNewEvent()
+                                QuickActionType.MORE -> onMore()
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun QuickActionCard(action: QuickAction, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Card(
+        onClick = onClick,
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        modifier = modifier.aspectRatio(1.6f),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(action.icon, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+            }
+            Text(
+                text = action.label,
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(top = 8.dp),
+            )
         }
     }
 }

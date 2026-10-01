@@ -366,7 +366,7 @@ private fun ExpenseRow(expense: ExpenseEntity, onDelete: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-private fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, ExpenseCategory, Double, LocalDate) -> Unit) {
+fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, ExpenseCategory, Double, LocalDate) -> Unit) {
     var title by rememberSaveable { mutableStateOf("") }
     var category by rememberSaveable { mutableStateOf(ExpenseCategory.GROCERIES) }
     var amountText by rememberSaveable { mutableStateOf("") }
