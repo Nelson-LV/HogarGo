@@ -746,11 +746,12 @@ private fun NextTaskCard(
 private fun SavingsGoalCard(goal: SavingsGoalEntity?, onClick: () -> Unit) {
     Card(
         onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         shape = RoundedCornerShape(24.dp),
     ) {
         if (goal == null) {
-            Column(Modifier.padding(20.dp)) {
+            Column(Modifier.fillMaxWidth().padding(20.dp)) {
                 Text(
                     text = stringResource(R.string.finance_goal_empty_title),
                     style = MaterialTheme.typography.bodyMedium,
