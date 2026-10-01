@@ -1,6 +1,5 @@
 package com.hogargo.app.ui.home
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,11 +29,13 @@ import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Checklist
+import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.People
 import androidx.compose.material.icons.outlined.Pets
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -46,6 +47,7 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -166,6 +168,14 @@ fun HomeScreen(
         Box(Modifier.height(16.dp))
 
         ZoriRestingCard(equippedIds = petState.wardrobe.filter { it.equipped }.map { it.id }.toSet(), onClick = onOpenPet)
+
+        Box(Modifier.height(16.dp))
+
+        ZoriAdviceCard(
+            adviceText = uiState.dailyAdvice,
+            isLoading = uiState.isLoadingAdvice,
+            onRefresh = { appViewModel.fetchDailyAdvice() },
+        )
 
         Box(Modifier.height(16.dp))
 
@@ -546,6 +556,64 @@ private fun ZoriRestingCard(equippedIds: Set<String>, onClick: () -> Unit) {
                 )
             }
             ZoriAvatar(equippedIds = equippedIds, size = 110.dp)
+        }
+    }
+}
+
+@Composable
+private fun ZoriAdviceCard(
+    adviceText: String,
+    isLoading: Boolean,
+    onRefresh: () -> Unit,
+) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        shape = RoundedCornerShape(24.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Lightbulb,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                    Text(
+                        text = "Consejo del día de Zori",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                IconButton(onClick = onRefresh, enabled = !isLoading) {
+                    Icon(
+                        imageVector = Icons.Outlined.Refresh,
+                        contentDescription = "Actualizar consejo",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+            Box(Modifier.height(8.dp))
+            if (isLoading) {
+                Text(
+                    text = "Cargando consejo en vivo desde la web...",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                Text(
+                    text = "\"$adviceText\"",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
         }
     }
 }

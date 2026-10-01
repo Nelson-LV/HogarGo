@@ -6,7 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.hogargo.app.data.local.HogarGoDatabase
 import com.hogargo.app.data.local.toHouseTask
 import com.hogargo.app.data.local.toTaskEntity
+import com.hogargo.app.data.network.AdviceRepository
 import com.hogargo.app.data.notification.StreakNotificationHelper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -22,42 +25,57 @@ data class AppUiState(
     val tasks: List<HouseTask> = emptyList(),
     val nextTask: HouseTask? = null,
     val streakDays: Int = 4,
+    val dailyAdvice: String = "Organizar tu hogar un poco cada día hace que la convivencia sea más feliz.",
+    val isLoadingAdvice: Boolean = false,
 )
 
-/**
- * Owns Tareas: persisted via Room (TaskEntity/TaskDao on the shared HogarGoDatabase),
- * plus the daily-streak calculation and its notification. Finanzas/Mascota/Calendario
- * each have their own Repository+ViewModel instead of living here — see
- * HogarGoApplication for how those are wired.
- */
 class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = HogarGoDatabase.getInstance(application)
     private val taskDao = db.taskDao()
+    private val adviceRepository = AdviceRepository()
+
+    private val _dailyAdvice = MutableStateFlow("Organizar tu hogar un poco cada día hace que la convivencia sea más feliz.")
+    private val _isLoadingAdvice = MutableStateFlow(false)
 
     init {
         viewModelScope.launch {
             if (taskDao.getTaskCount() == 0) {
                 taskDao.insertTasks(InitialTasks.map { it.toTaskEntity() })
             }
+            fetchDailyAdvice()
         }
     }
 
     val uiState: StateFlow<AppUiState> = combine(
-        taskDao.getAllTasks(),
-        taskDao.getNextPendingTask(),
-    ) { tasks, next ->
+        combine(taskDao.getAllTasks(), taskDao.getNextPendingTask()) { tasks, next ->
+            Pair(tasks, next)
+        },
+        _dailyAdvice,
+        _isLoadingAdvice,
+    ) { (tasks, next), advice, isLoading ->
         val tasksList = tasks.map { it.toHouseTask() }
         AppUiState(
             tasks = tasksList,
             nextTask = next?.toHouseTask(),
             streakDays = calculateStreakDays(tasksList),
+            dailyAdvice = advice,
+            isLoadingAdvice = isLoading,
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = AppUiState(),
     )
+
+    fun fetchDailyAdvice() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _isLoadingAdvice.value = true
+            val advice = adviceRepository.fetchRandomAdvice()
+            _dailyAdvice.value = advice
+            _isLoadingAdvice.value = false
+        }
+    }
 
     private fun calculateStreakDays(tasks: List<HouseTask>): Int {
         val completedDates = tasks
