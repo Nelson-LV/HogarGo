@@ -18,6 +18,7 @@
     <string name="home_zori_resting_subtitle">¡Completa tareas para despertar a Zori y ganar las recompensas de hoy!</string>
     <string name="home_start_day">Empezar Día</string>
     <string name="home_next_task">Siguiente Tarea</string>
+    <string name="home_more_goals">Ver %1$d meta(s) más</string>
     <string name="home_saved_amount">%1$s ahorrado</string>
     <string name="home_goal_amount">Meta: %1$s</string>
     <string name="home_quick_new_task">Nueva Tarea</string>
@@ -92,7 +93,12 @@
     <string name="finance_goal_create_button">Crear Meta</string>
     <string name="finance_goal_empty_title">Aún no tienes una meta de ahorro.</string>
     <string name="finance_goal_empty_action">Crear meta</string>
-    <string name="finance_goal_contribute_title">Aportar a la meta</string>
+    <string name="finance_goals_title">Metas de ahorro</string>
+    <string name="finance_goal_new">Nueva meta</string>
+    <string name="finance_goal_delete_title">¿Eliminar meta?</string>
+    <string name="finance_goal_delete_message">Se eliminará \"%1$s\" junto con su progreso.</string>
+    <string name="finance_goal_delete_button">Eliminar</string>
+    <string name="finance_goal_contribute_to">Aportar a %1$s</string>
     <string name="finance_goal_contribute_amount_label">Monto a aportar</string>
     <string name="finance_goal_contribute_button">Aportar</string>
 

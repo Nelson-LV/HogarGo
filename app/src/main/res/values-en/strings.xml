@@ -18,6 +18,7 @@
     <string name="home_zori_resting_subtitle">Complete tasks to wake Zori up and earn today\'s rewards!</string>
     <string name="home_start_day">Start Day</string>
     <string name="home_next_task">Next Task</string>
+    <string name="home_more_goals">See %1$d more goal(s)</string>
     <string name="home_saved_amount">%1$s saved</string>
     <string name="home_goal_amount">Goal: %1$s</string>
     <string name="home_quick_new_task">New Task</string>
@@ -92,7 +93,12 @@
     <string name="finance_goal_create_button">Create Goal</string>
     <string name="finance_goal_empty_title">You don\'t have a savings goal yet.</string>
     <string name="finance_goal_empty_action">Create goal</string>
-    <string name="finance_goal_contribute_title">Contribute to the goal</string>
+    <string name="finance_goals_title">Savings goals</string>
+    <string name="finance_goal_new">New goal</string>
+    <string name="finance_goal_delete_title">Delete goal?</string>
+    <string name="finance_goal_delete_message">\"%1$s\" and its progress will be deleted.</string>
+    <string name="finance_goal_delete_button">Delete</string>
+    <string name="finance_goal_contribute_to">Contribute to %1$s</string>
     <string name="finance_goal_contribute_amount_label">Amount to contribute</string>
     <string name="finance_goal_contribute_button">Contribute</string>
 

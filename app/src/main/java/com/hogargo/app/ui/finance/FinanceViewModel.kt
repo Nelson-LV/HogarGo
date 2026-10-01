@@ -17,7 +17,7 @@ import java.time.LocalDate
 
 data class FinanceUiState(
     val expenses: List<ExpenseEntity> = emptyList(),
-    val savingsGoal: SavingsGoalEntity? = null,
+    val savingsGoals: List<SavingsGoalEntity> = emptyList(),
 ) {
     val totalSpent: Double get() = expenses.sumOf { it.amount }
     val averageExpense: Double get() = if (expenses.isEmpty()) 0.0 else totalSpent / expenses.size
@@ -31,8 +31,8 @@ data class FinanceUiState(
 
 class FinanceViewModel(private val repository: FinanceRepository) : ViewModel() {
 
-    val uiState: StateFlow<FinanceUiState> = combine(repository.expenses, repository.savingsGoal) { expenses, goal ->
-        FinanceUiState(expenses = expenses, savingsGoal = goal)
+    val uiState: StateFlow<FinanceUiState> = combine(repository.expenses, repository.savingsGoals) { expenses, goals ->
+        FinanceUiState(expenses = expenses, savingsGoals = goals)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), FinanceUiState())
 
     fun addExpense(title: String, category: ExpenseCategory, amount: Double, date: LocalDate = LocalDate.now()) {
@@ -43,12 +43,16 @@ class FinanceViewModel(private val repository: FinanceRepository) : ViewModel() 
         viewModelScope.launch { repository.deleteExpense(expense) }
     }
 
-    fun createOrRenameGoal(title: String, targetAmount: Double) {
-        viewModelScope.launch { repository.createOrRenameGoal(title, targetAmount) }
+    fun addGoal(title: String, targetAmount: Double) {
+        viewModelScope.launch { repository.addGoal(title, targetAmount) }
     }
 
-    fun contribute(amount: Double) {
-        viewModelScope.launch { repository.contribute(amount) }
+    fun deleteGoal(goal: SavingsGoalEntity) {
+        viewModelScope.launch { repository.deleteGoal(goal) }
+    }
+
+    fun contribute(goalId: Long, amount: Double) {
+        viewModelScope.launch { repository.contribute(goalId, amount) }
     }
 
     companion object {

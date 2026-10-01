@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.TrendingDown
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.MoreHoriz
@@ -62,6 +65,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hogargo.app.R
 import com.hogargo.app.data.local.ExpenseCategory
@@ -80,7 +84,8 @@ fun FinanceScreen(viewModel: FinanceViewModel) {
     val uiState by viewModel.uiState.collectAsState()
     var showAddExpense by rememberSaveable { mutableStateOf(false) }
     var showGoalDialog by rememberSaveable { mutableStateOf(false) }
-    var showContributeDialog by rememberSaveable { mutableStateOf(false) }
+    var contributeGoalId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var goalToDelete by remember { mutableStateOf<SavingsGoalEntity?>(null) }
 
     Column(
         modifier = Modifier
@@ -109,10 +114,11 @@ fun FinanceScreen(viewModel: FinanceViewModel) {
         }
 
         Box(Modifier.size(16.dp))
-        SavingsGoalCard(
-            goal = uiState.savingsGoal,
+        SavingsGoalsSection(
+            goals = uiState.savingsGoals,
             onCreateGoal = { showGoalDialog = true },
-            onContribute = { showContributeDialog = true },
+            onContribute = { contributeGoalId = it.id },
+            onDelete = { goalToDelete = it },
         )
 
         Box(Modifier.size(16.dp))
@@ -140,17 +146,35 @@ fun FinanceScreen(viewModel: FinanceViewModel) {
         GoalDialog(
             onDismiss = { showGoalDialog = false },
             onConfirm = { title, target ->
-                viewModel.createOrRenameGoal(title, target)
+                viewModel.addGoal(title, target)
                 showGoalDialog = false
             },
         )
     }
-    if (showContributeDialog) {
+    val contributeGoal = uiState.savingsGoals.find { it.id == contributeGoalId }
+    if (contributeGoal != null) {
         ContributeDialog(
-            onDismiss = { showContributeDialog = false },
+            goalTitle = contributeGoal.title,
+            onDismiss = { contributeGoalId = null },
             onConfirm = { amount ->
-                viewModel.contribute(amount)
-                showContributeDialog = false
+                viewModel.contribute(contributeGoal.id, amount)
+                contributeGoalId = null
+            },
+        )
+    }
+    goalToDelete?.let { goal ->
+        AlertDialog(
+            onDismissRequest = { goalToDelete = null },
+            title = { Text(stringResource(R.string.finance_goal_delete_title)) },
+            text = { Text(stringResource(R.string.finance_goal_delete_message, goal.title)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteGoal(goal)
+                    goalToDelete = null
+                }) { Text(stringResource(R.string.finance_goal_delete_button)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { goalToDelete = null }) { Text(stringResource(R.string.finance_cancel_button)) }
             },
         )
     }
@@ -173,38 +197,101 @@ private fun categoryIcon(category: ExpenseCategory): ImageVector = when (categor
 }
 
 @Composable
-private fun SavingsGoalCard(goal: SavingsGoalEntity?, onCreateGoal: () -> Unit, onContribute: () -> Unit) {
+private fun SavingsGoalsSection(
+    goals: List<SavingsGoalEntity>,
+    onCreateGoal: () -> Unit,
+    onContribute: (SavingsGoalEntity) -> Unit,
+    onDelete: (SavingsGoalEntity) -> Unit,
+) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(stringResource(R.string.finance_goals_title), style = MaterialTheme.typography.titleLarge)
+            if (goals.isNotEmpty()) {
+                TextButton(onClick = onCreateGoal) {
+                    Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Text(stringResource(R.string.finance_goal_new), modifier = Modifier.padding(start = 4.dp))
+                }
+            }
+        }
+        Box(Modifier.size(8.dp))
+        when {
+            goals.isEmpty() -> EmptyGoalsCard(onCreateGoal)
+            goals.size == 1 -> SavingsGoalCard(goals.first(), onContribute, onDelete, Modifier.fillMaxWidth())
+            else -> LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(goals, key = { it.id }) { goal ->
+                    SavingsGoalCard(goal, onContribute, onDelete, Modifier.width(280.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyGoalsCard(onCreateGoal: () -> Unit) {
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        if (goal == null) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Icon(Icons.Outlined.Savings, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Text(
+                stringResource(R.string.finance_goal_empty_title),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp, bottom = 16.dp),
+            )
+            Button(onClick = onCreateGoal, shape = RoundedCornerShape(50)) {
+                Text(stringResource(R.string.finance_goal_empty_action))
+            }
+        }
+    }
+}
+
+@Composable
+private fun SavingsGoalCard(
+    goal: SavingsGoalEntity,
+    onContribute: (SavingsGoalEntity) -> Unit,
+    onDelete: (SavingsGoalEntity) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        modifier = modifier,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 24.dp, end = 8.dp, top = 8.dp, bottom = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Outlined.Savings, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Text(
-                    stringResource(R.string.finance_goal_empty_title),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 16.dp),
+                    goal.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
                 )
-                Button(onClick = onCreateGoal, shape = RoundedCornerShape(50)) {
-                    Text(stringResource(R.string.finance_goal_empty_action))
+                IconButton(onClick = { onDelete(goal) }) {
+                    Icon(Icons.Outlined.DeleteOutline, contentDescription = stringResource(R.string.finance_goal_delete_title), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(goal.title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+            Column(Modifier.padding(end = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = stringResource(R.string.finance_savings_progress, "$${"%.2f".format(goal.currentAmount)}", "$${"%.2f".format(goal.targetAmount)}"),
                     style = MaterialTheme.typography.bodyLarge,
@@ -213,7 +300,7 @@ private fun SavingsGoalCard(goal: SavingsGoalEntity?, onCreateGoal: () -> Unit, 
                 Box(Modifier.size(20.dp))
                 SavingsJarGraphic(progress = if (goal.targetAmount > 0) (goal.currentAmount / goal.targetAmount).toFloat().coerceIn(0f, 1f) else 0f)
                 Box(Modifier.size(16.dp))
-                OutlinedButton(onClick = onContribute, shape = RoundedCornerShape(50)) {
+                OutlinedButton(onClick = { onContribute(goal) }, shape = RoundedCornerShape(50)) {
                     Text(stringResource(R.string.finance_goal_contribute_button))
                 }
             }
@@ -525,7 +612,7 @@ private fun GoalDialog(onDismiss: () -> Unit, onConfirm: (String, Double) -> Uni
         },
         confirmButton = {
             TextButton(onClick = {
-                val target = targetText.toDoubleOrNull()
+                val target = targetText.replace(',', '.').toDoubleOrNull()
                 error = when {
                     title.isBlank() -> titleEmptyError
                     target == null || target <= 0.0 -> amountInvalidError
@@ -545,14 +632,14 @@ private fun GoalDialog(onDismiss: () -> Unit, onConfirm: (String, Double) -> Uni
 }
 
 @Composable
-private fun ContributeDialog(onDismiss: () -> Unit, onConfirm: (Double) -> Unit) {
+private fun ContributeDialog(goalTitle: String, onDismiss: () -> Unit, onConfirm: (Double) -> Unit) {
     var amountText by rememberSaveable { mutableStateOf("") }
     var error by rememberSaveable { mutableStateOf<String?>(null) }
     val amountInvalidError = stringResource(R.string.finance_error_invalid_amount)
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.finance_goal_contribute_title)) },
+        title = { Text(stringResource(R.string.finance_goal_contribute_to, goalTitle)) },
         text = {
             Column {
                 OutlinedTextField(
@@ -571,7 +658,7 @@ private fun ContributeDialog(onDismiss: () -> Unit, onConfirm: (Double) -> Unit)
         },
         confirmButton = {
             TextButton(onClick = {
-                val amount = amountText.toDoubleOrNull()
+                val amount = amountText.replace(',', '.').toDoubleOrNull()
                 error = if (amount == null || amount <= 0.0) amountInvalidError else null
                 if (error == null && amount != null) {
                     onConfirm(amount)

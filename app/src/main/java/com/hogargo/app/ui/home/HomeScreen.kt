@@ -90,6 +90,8 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 
+private const val MaxHomeGoals = 3
+
 @Composable
 fun HomeScreen(
     appViewModel: AppViewModel,
@@ -169,7 +171,24 @@ fun HomeScreen(
 
         Box(Modifier.height(16.dp))
 
-        SavingsGoalCard(goal = financeState.savingsGoal, onClick = onOpenFinance)
+        val goals = financeState.savingsGoals
+        if (goals.isEmpty()) {
+            SavingsGoalCard(goal = null, onClick = onOpenFinance)
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                goals.take(MaxHomeGoals).forEach { goal ->
+                    SavingsGoalCard(goal = goal, onClick = onOpenFinance)
+                }
+                if (goals.size > MaxHomeGoals) {
+                    Text(
+                        text = stringResource(R.string.home_more_goals, goals.size - MaxHomeGoals),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable(onClick = onOpenFinance),
+                    )
+                }
+            }
+        }
 
         Box(Modifier.height(16.dp))
 
