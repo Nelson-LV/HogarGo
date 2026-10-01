@@ -76,7 +76,7 @@ import com.hogargo.app.HogarGoApplication
 import com.hogargo.app.R
 import com.hogargo.app.data.AppViewModel
 import com.hogargo.app.data.FamilyMembers
-import com.hogargo.app.data.HomeSavingsGoal
+import com.hogargo.app.data.local.SavingsGoalEntity
 import com.hogargo.app.data.HouseTask
 import com.hogargo.app.data.getDisplayTitle
 import com.hogargo.app.data.local.ExpenseCategory
@@ -109,6 +109,8 @@ private fun parseHomeExpenseDate(dateLabel: String, todayLabel: String): java.ti
 fun HomeScreen(
     appViewModel: AppViewModel,
     onNewTask: () -> Unit,
+    onOpenFinance: () -> Unit = {},
+    onOpenPet: () -> Unit = {},
 ) {
     val application = LocalContext.current.applicationContext as HogarGoApplication
     val financeViewModel: FinanceViewModel = viewModel(factory = FinanceViewModel.factory(application.financeRepository))
@@ -116,6 +118,7 @@ fun HomeScreen(
     val calendarViewModel: CalendarViewModel = viewModel(factory = CalendarViewModel.factory(application.calendarRepository))
 
     val uiState by appViewModel.uiState.collectAsState()
+    val financeState by financeViewModel.uiState.collectAsState()
     var showNewEventDialog by rememberSaveable { mutableStateOf(false) }
     var showNewExpenseDialog by rememberSaveable { mutableStateOf(false) }
     var showMoreBottomSheet by rememberSaveable { mutableStateOf(false) }
@@ -175,7 +178,7 @@ fun HomeScreen(
 
         Box(Modifier.height(16.dp))
 
-        ZoriRestingCard()
+        ZoriRestingCard(onClick = onOpenPet)
 
         Box(Modifier.height(16.dp))
 
@@ -186,7 +189,7 @@ fun HomeScreen(
 
         Box(Modifier.height(16.dp))
 
-        SavingsGoalCard()
+        SavingsGoalCard(goal = financeState.savingsGoal, onClick = onOpenFinance)
 
         Box(Modifier.height(16.dp))
 
@@ -644,8 +647,9 @@ private fun StreakChip(streakDays: Int) {
 }
 
 @Composable
-private fun ZoriRestingCard() {
+private fun ZoriRestingCard(onClick: () -> Unit) {
     Card(
+        onClick = onClick,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         shape = RoundedCornerShape(24.dp),
     ) {
@@ -739,19 +743,36 @@ private fun NextTaskCard(
 }
 
 @Composable
-private fun SavingsGoalCard() {
-    val progress = HomeSavingsGoal.current.toFloat() / HomeSavingsGoal.target.toFloat()
+private fun SavingsGoalCard(goal: SavingsGoalEntity?, onClick: () -> Unit) {
     Card(
+        onClick = onClick,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         shape = RoundedCornerShape(24.dp),
     ) {
+        if (goal == null) {
+            Column(Modifier.padding(20.dp)) {
+                Text(
+                    text = stringResource(R.string.finance_goal_empty_title),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = stringResource(R.string.finance_goal_empty_action),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+            return@Card
+        }
+        val progress = if (goal.targetAmount > 0) (goal.currentAmount / goal.targetAmount).toFloat().coerceIn(0f, 1f) else 0f
         Column(Modifier.padding(20.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    text = stringResource(HomeSavingsGoal.titleRes),
+                    text = goal.title,
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -772,12 +793,12 @@ private fun SavingsGoalCard() {
             )
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(
-                    text = stringResource(R.string.home_saved_amount, "$${HomeSavingsGoal.current}"),
+                    text = stringResource(R.string.home_saved_amount, "$${"%.2f".format(goal.currentAmount)}"),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = stringResource(R.string.home_goal_amount, "$${HomeSavingsGoal.target}"),
+                    text = stringResource(R.string.home_goal_amount, "$${"%.2f".format(goal.targetAmount)}"),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

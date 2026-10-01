@@ -36,9 +36,3 @@ data class HouseTask(
 fun HouseTask.getDisplayTitle(): String {
     return titleRes?.let { stringResource(it) } ?: titleText ?: ""
 }
-
-data class SavingsGoal(
-    @StringRes val titleRes: Int,
-    val current: Int,
-    val target: Int,
-)

@@ -37,14 +37,3 @@ val InitialTasks = listOf(
         coinReward = 30,
     ),
 )
-
-val NextTask = HouseTask(
-    id = "wash_dishes",
-    titleRes = R.string.task_wash_dishes,
-    category = TaskCategory.KITCHEN,
-    minutes = 15,
-    completed = false,
-    coinReward = 10,
-)
-
-val HomeSavingsGoal = SavingsGoal(R.string.home_savings_goal, current = 650, target = 1000)

@@ -18,7 +18,6 @@
     <string name="home_zori_resting_subtitle">¡Completa tareas para despertar a Zori y ganar las recompensas de hoy!</string>
     <string name="home_start_day">Empezar Día</string>
     <string name="home_next_task">Siguiente Tarea</string>
-    <string name="home_savings_goal">Fondo de Vacaciones</string>
     <string name="home_saved_amount">%1$s ahorrado</string>
     <string name="home_goal_amount">Meta: %1$s</string>
     <string name="home_quick_new_task">Nueva Tarea</string>

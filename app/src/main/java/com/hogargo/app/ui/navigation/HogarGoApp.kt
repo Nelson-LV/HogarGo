@@ -70,6 +70,8 @@ fun HogarGoApp(appViewModel: AppViewModel = viewModel()) {
                 HomeScreen(
                     appViewModel = appViewModel,
                     onNewTask = { navController.navigate(Routes.NEW_TASK) },
+                    onOpenFinance = { navController.navigateToTab(Routes.FINANCE) },
+                    onOpenPet = { navController.navigateToTab(Routes.PET) },
                 )
             }
             composable(Routes.TASKS) {
@@ -107,15 +109,7 @@ private fun HogarGoBottomBar(navController: androidx.navigation.NavController, c
             val selected = currentRoute == destination.route
             NavigationBarItem(
                 selected = selected,
-                onClick = {
-                    navController.navigate(destination.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
+                onClick = { navController.navigateToTab(destination.route) },
                 icon = {
                     Icon(
                         imageVector = if (selected) destination.selectedIcon else destination.unselectedIcon,
@@ -128,5 +122,15 @@ private fun HogarGoBottomBar(navController: androidx.navigation.NavController, c
                 ),
             )
         }
+    }
+}
+
+private fun androidx.navigation.NavController.navigateToTab(route: String) {
+    navigate(route) {
+        popUpTo(graph.findStartDestination().id) {
+            saveState = true
+        }
+        launchSingleTop = true
+        restoreState = true
     }
 }
