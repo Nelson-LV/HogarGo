@@ -300,10 +300,6 @@ private fun SignInDialog(
         scope.launch {
             when (val result = onSignIn(name, code)) {
                 is AuthResult.Success -> onSignedIn()
-<<<<<<< Updated upstream
-=======
-                is AuthResult.Pending -> loading = false
->>>>>>> Stashed changes
                 is AuthResult.Failure -> {
                     error = result.error
                     loading = false

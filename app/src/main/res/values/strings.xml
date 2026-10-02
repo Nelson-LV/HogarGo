@@ -278,25 +278,5 @@
     <string name="profile_you">tú</string>
     <string name="profile_sign_out">Cerrar sesión</string>
     <string name="profile_copy_code">Copiar código</string>
-<<<<<<< Updated upstream
-=======
-    <string name="auth_error_pending_approval">Tu solicitud aún no ha sido aceptada. Pídele al administrador que te apruebe.</string>
-    <string name="join_pending_title">¡Solicitud enviada!</string>
-    <string name="join_pending_desc">El administrador del hogar debe aceptarte antes de que puedas entrar. Cuando lo haga, usa Iniciar Sesión con tu nombre y el código.</string>
-
-    <!-- Admin tools -->
-    <string name="admin_edit_household">Cambiar nombre del hogar</string>
-    <string name="admin_household_name_label">Nombre del hogar</string>
-    <string name="admin_save">Guardar</string>
-    <string name="admin_cancel">Cancelar</string>
-    <string name="admin_pending_title">Solicitudes pendientes (%1$d)</string>
-    <string name="admin_accept">Aceptar</string>
-    <string name="admin_reject">Rechazar</string>
-    <string name="admin_remove_member_cd">Eliminar del hogar</string>
-    <string name="admin_remove_title">¿Eliminar a %1$s?</string>
-    <string name="admin_remove_message">Saldrá del hogar y sus tareas quedarán sin asignar. Podrá volver a pedir ingreso con el código.</string>
-    <string name="admin_remove_confirm">Eliminar</string>
-
->>>>>>> Stashed changes
     <string name="home_greeting_named">¡Buenos días, %1$s!</string>
 </resources>
