@@ -22,6 +22,10 @@ import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.HomeWork
+<<<<<<< Updated upstream
+=======
+import androidx.compose.material.icons.filled.HourglassTop
+>>>>>>> Stashed changes
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.Person
@@ -68,6 +72,10 @@ fun JoinHouseholdScreen(
     var code by rememberSaveable { mutableStateOf("") }
     var error by remember { mutableStateOf<AuthError?>(null) }
     var loading by remember { mutableStateOf(false) }
+<<<<<<< Updated upstream
+=======
+    var requestSent by rememberSaveable { mutableStateOf(false) }
+>>>>>>> Stashed changes
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
 
@@ -78,6 +86,13 @@ fun JoinHouseholdScreen(
         scope.launch {
             when (val result = onJoin(name, code)) {
                 is AuthResult.Success -> onJoined()
+<<<<<<< Updated upstream
+=======
+                is AuthResult.Pending -> {
+                    requestSent = true
+                    loading = false
+                }
+>>>>>>> Stashed changes
                 is AuthResult.Failure -> {
                     error = result.error
                     loading = false
@@ -136,6 +151,37 @@ fun JoinHouseholdScreen(
             )
         }
 
+<<<<<<< Updated upstream
+=======
+        if (requestSent) {
+            Spacer(Modifier.height(20.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(BrandOrangeContainer)
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Icon(Icons.Filled.HourglassTop, contentDescription = null, tint = BrandBrownStrong, modifier = Modifier.size(32.dp))
+                Text(
+                    text = stringResource(R.string.join_pending_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = BrandBrownStrong,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+                Text(
+                    text = stringResource(R.string.join_pending_desc),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+            }
+        }
+
+>>>>>>> Stashed changes
         Spacer(Modifier.height(20.dp))
 
         // Form
@@ -143,7 +189,11 @@ fun JoinHouseholdScreen(
             FieldLabel(stringResource(R.string.join_name_label), Icons.Filled.Person)
             HogarTextField(
                 value = name,
+<<<<<<< Updated upstream
                 onValueChange = { name = it; error = null },
+=======
+                onValueChange = { name = it; error = null; requestSent = false },
+>>>>>>> Stashed changes
                 placeholder = stringResource(R.string.join_name_hint),
                 errorText = error?.takeIf { !it.isCodeError() }?.let { stringResource(it.messageRes()) },
                 imeAction = ImeAction.Next,

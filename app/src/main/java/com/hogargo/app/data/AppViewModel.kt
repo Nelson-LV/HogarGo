@@ -32,6 +32,11 @@ data class AppUiState(
     val isLoadingAdvice: Boolean = false,
     /** Everyone in the current household (including [currentMember]). */
     val members: List<MemberEntity> = emptyList(),
+<<<<<<< Updated upstream
+=======
+    /** People waiting for the admin to accept them (only shown to the admin). */
+    val pendingMembers: List<MemberEntity> = emptyList(),
+>>>>>>> Stashed changes
     /** The person using this device. */
     val currentMember: MemberEntity? = null,
     val household: HouseholdEntity? = null,
@@ -41,6 +46,10 @@ private data class HouseholdData(
     val tasks: List<TaskEntity>,
     val next: TaskEntity?,
     val members: List<MemberEntity>,
+<<<<<<< Updated upstream
+=======
+    val pending: List<MemberEntity>,
+>>>>>>> Stashed changes
     val household: HouseholdEntity?,
 )
 
@@ -68,9 +77,16 @@ class AppViewModel(
         taskDao.getAllTasks(householdId),
         taskDao.getNextPendingTask(householdId),
         memberDao.observeByHousehold(householdId),
+<<<<<<< Updated upstream
         householdDao.observeById(householdId),
     ) { tasks, next, members, household ->
         HouseholdData(tasks, next, members, household)
+=======
+        memberDao.observePending(householdId),
+        householdDao.observeById(householdId),
+    ) { tasks, next, members, pending, household ->
+        HouseholdData(tasks, next, members, pending, household)
+>>>>>>> Stashed changes
     }
 
     val uiState: StateFlow<AppUiState> = combine(
@@ -86,6 +102,10 @@ class AppViewModel(
             dailyAdvice = advice,
             isLoadingAdvice = isLoading,
             members = data.members,
+<<<<<<< Updated upstream
+=======
+            pendingMembers = if (data.members.any { it.id == memberId && it.isAdmin }) data.pending else emptyList(),
+>>>>>>> Stashed changes
             currentMember = data.members.firstOrNull { it.id == memberId },
             household = data.household,
         )
@@ -94,6 +114,47 @@ class AppViewModel(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = AppUiState(),
     )
+
+    // ---- Admin-only actions. The check runs against the database, not the UI, so nobody else can use them.
+
+    private suspend fun isAdmin(): Boolean {
+        val me = memberDao.findById(memberId) ?: return false
+        return me.isAdmin && me.householdId == householdId && me.isApproved
+    }
+
+    fun renameHousehold(newName: String) {
+        val name = newName.trim()
+        if (name.isEmpty()) return
+        viewModelScope.launch {
+            if (isAdmin()) householdDao.updateName(householdId, name)
+        }
+    }
+
+    /** Removes someone from the household. The admin can't be removed. */
+    fun removeMember(targetId: String) {
+        viewModelScope.launch {
+            if (!isAdmin() || targetId == memberId) return@launch
+            taskDao.clearAssignee(householdId, targetId)
+            memberDao.deleteNonAdmin(householdId, targetId)
+        }
+    }
+
+    fun approveMember(targetId: String) {
+        viewModelScope.launch {
+            if (isAdmin()) memberDao.approve(householdId, targetId)
+        }
+    }
+
+    /** Declines a join request (only pending people can be rejected). */
+    fun rejectMember(targetId: String) {
+        viewModelScope.launch {
+            if (!isAdmin()) return@launch
+            val target = memberDao.findById(targetId) ?: return@launch
+            if (target.householdId == householdId && !target.isApproved) {
+                memberDao.deleteNonAdmin(householdId, targetId)
+            }
+        }
+    }
 
     fun fetchDailyAdvice() {
         viewModelScope.launch(Dispatchers.IO) {

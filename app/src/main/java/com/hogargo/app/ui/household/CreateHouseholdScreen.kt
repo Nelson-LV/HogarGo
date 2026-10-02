@@ -98,6 +98,10 @@ fun CreateHouseholdScreen(
         scope.launch {
             when (val result = onCreate(userName, householdName, code)) {
                 is AuthResult.Success -> onCreated()
+<<<<<<< Updated upstream
+=======
+                is AuthResult.Pending -> loading = false
+>>>>>>> Stashed changes
                 is AuthResult.Failure -> {
                     error = result.error
                     if (result.error == AuthError.CODE_TAKEN) code = generateCode()

@@ -16,6 +16,13 @@ interface TaskDao {
 
     @Query("SELECT * FROM tasks WHERE householdId = :householdId AND id = :id")
     suspend fun getTaskById(householdId: String, id: String): TaskEntity?
+<<<<<<< Updated upstream
+=======
+
+    /** Tasks of a removed member go back to "unassigned". */
+    @Query("UPDATE tasks SET assigneeId = NULL WHERE householdId = :householdId AND assigneeId = :memberId")
+    suspend fun clearAssignee(householdId: String, memberId: String)
+>>>>>>> Stashed changes
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTask(task: TaskEntity)

@@ -25,7 +25,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         HouseholdEntity::class,
         MemberEntity::class,
     ],
+<<<<<<< Updated upstream
     version = 6,
+=======
+    version = 7,
+>>>>>>> Stashed changes
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -49,6 +53,13 @@ abstract class HogarGoDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Everyone who was already in a household stays accepted.
+                db.execSQL("ALTER TABLE members ADD COLUMN isApproved INTEGER NOT NULL DEFAULT 1")
+            }
+        }
+
         @Volatile
         private var instance: HogarGoDatabase? = null
 
@@ -59,7 +70,7 @@ abstract class HogarGoDatabase : RoomDatabase() {
                     HogarGoDatabase::class.java,
                     "hogargo.db",
                 )
-                    .addMigrations(MIGRATION_4_5)
+                    .addMigrations(MIGRATION_4_5, MIGRATION_6_7)
                     // Pre-release schema: destroy & recreate on bump instead of writing migrations.
                     .fallbackToDestructiveMigration(dropAllTables = true)
                     .build().also { instance = it }

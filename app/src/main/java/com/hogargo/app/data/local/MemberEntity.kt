@@ -18,5 +18,10 @@ data class MemberEntity(
     val name: String,
     val nameKey: String,
     val isAdmin: Boolean = false,
+<<<<<<< Updated upstream
+=======
+    /** false = joined with the code but still waiting for the admin to accept them. */
+    val isApproved: Boolean = true,
+>>>>>>> Stashed changes
     val createdAt: Long,
 )

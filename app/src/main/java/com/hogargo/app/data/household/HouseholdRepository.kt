@@ -17,11 +17,21 @@ enum class AuthError {
     NAME_TAKEN,
     MEMBER_NOT_FOUND,
     CODE_TAKEN,
+<<<<<<< Updated upstream
+=======
+    PENDING_APPROVAL,
+>>>>>>> Stashed changes
 }
 
 sealed interface AuthResult {
     data class Success(val session: ActiveSession) : AuthResult
     data class Failure(val error: AuthError) : AuthResult
+<<<<<<< Updated upstream
+=======
+
+    /** The request was sent; the admin still has to accept it before the person can get in. */
+    data object Pending : AuthResult
+>>>>>>> Stashed changes
 }
 
 class HouseholdRepository(
@@ -68,7 +78,11 @@ class HouseholdRepository(
         return AuthResult.Success(open(member, household))
     }
 
+<<<<<<< Updated upstream
     /** Adds [userName] to the household that owns [rawCode] (and only that one) and signs them in. */
+=======
+    /** Sends a join request to the household that owns [rawCode]; the admin must accept it. */
+>>>>>>> Stashed changes
     suspend fun joinHousehold(userName: String, rawCode: String): AuthResult {
         val name = userName.trim()
         if (name.isEmpty()) return AuthResult.Failure(AuthError.EMPTY_NAME)
@@ -76,9 +90,15 @@ class HouseholdRepository(
         if (code.length != HouseholdCode.LENGTH) return AuthResult.Failure(AuthError.INVALID_CODE)
 
         val household = householdDao.findByCode(code) ?: return AuthResult.Failure(AuthError.CODE_NOT_FOUND)
+<<<<<<< Updated upstream
         val member = newMember(household.id, name, isAdmin = false, now = System.currentTimeMillis())
         if (memberDao.insert(member) == -1L) return AuthResult.Failure(AuthError.NAME_TAKEN)
         return AuthResult.Success(open(member, household))
+=======
+        val member = newMember(household.id, name, isAdmin = false, now = System.currentTimeMillis(), approved = false)
+        if (memberDao.insert(member) == -1L) return AuthResult.Failure(AuthError.NAME_TAKEN)
+        return AuthResult.Pending
+>>>>>>> Stashed changes
     }
 
     /** Signs back in as an existing member of the household that owns [rawCode]. */
@@ -91,6 +111,10 @@ class HouseholdRepository(
         val household = householdDao.findByCode(code) ?: return AuthResult.Failure(AuthError.CODE_NOT_FOUND)
         val member = memberDao.findByName(household.id, name.lowercase())
             ?: return AuthResult.Failure(AuthError.MEMBER_NOT_FOUND)
+<<<<<<< Updated upstream
+=======
+        if (!member.isApproved) return AuthResult.Failure(AuthError.PENDING_APPROVAL)
+>>>>>>> Stashed changes
         return AuthResult.Success(open(member, household))
     }
 
@@ -99,7 +123,11 @@ class HouseholdRepository(
         val memberId = sessionStore.memberId ?: return null
         val member = memberDao.findById(memberId)
         val household = member?.let { householdDao.findById(it.householdId) }
+<<<<<<< Updated upstream
         if (member == null || household == null) {
+=======
+        if (member == null || household == null || !member.isApproved) {
+>>>>>>> Stashed changes
             sessionStore.clear()
             return null
         }
@@ -108,12 +136,20 @@ class HouseholdRepository(
 
     fun signOut() = sessionStore.clear()
 
+<<<<<<< Updated upstream
     private fun newMember(householdId: String, name: String, isAdmin: Boolean, now: Long) = MemberEntity(
+=======
+    private fun newMember(householdId: String, name: String, isAdmin: Boolean, now: Long, approved: Boolean = true) = MemberEntity(
+>>>>>>> Stashed changes
         id = UUID.randomUUID().toString(),
         householdId = householdId,
         name = name,
         nameKey = name.lowercase(),
         isAdmin = isAdmin,
+<<<<<<< Updated upstream
+=======
+        isApproved = approved,
+>>>>>>> Stashed changes
         createdAt = now,
     )
 

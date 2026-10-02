@@ -58,6 +58,10 @@ fun AuthError.messageRes(): Int = when (this) {
     AuthError.NAME_TAKEN -> R.string.auth_error_name_taken
     AuthError.MEMBER_NOT_FOUND -> R.string.auth_error_member_not_found
     AuthError.CODE_TAKEN -> R.string.auth_error_code_taken
+<<<<<<< Updated upstream
+=======
+    AuthError.PENDING_APPROVAL -> R.string.auth_error_pending_approval
+>>>>>>> Stashed changes
 }
 
 /** Which field an [AuthError] should be shown under. */
