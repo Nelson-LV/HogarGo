@@ -203,7 +203,7 @@
     <string name="about_student_nelson_role">Finanzas, Mascota y Calendario</string>
     <string name="about_student_jhonatan">Jhonatan Palacios</string>
     <string name="about_student_jhonatan_role">Tareas, Inicio y notificaciones</string>
-    <string name="about_footer">Hecho para el curso de Aplicaciones Móviles.</string>
+    <string name="about_footer">Hecho con ❤️ para el curso de Aplicaciones Móviles.</string>
 
     <!-- Welcome / auth -->
     <string name="welcome_tagline">Armonía, tareas y finanzas para tu familia</string>
@@ -281,6 +281,30 @@
     <string name="auth_error_pending_approval">Tu solicitud aún no ha sido aceptada. Pídele al administrador que te apruebe.</string>
     <string name="join_pending_title">¡Solicitud enviada!</string>
     <string name="join_pending_desc">El administrador del hogar debe aceptarte antes de que puedas entrar. Cuando lo haga, usa Iniciar Sesión con tu nombre y el código.</string>
+
+    <!-- Recovery user -->
+    <string name="recovery_label">Usuario de recuperación</string>
+    <string name="recovery_hint">Ej. familia_perez24</string>
+    <string name="recovery_help">Es distinto de tu nombre. Con él podrás ver el código de tus hogares si lo olvidas. Guárdalo bien y no lo compartas.</string>
+    <string name="recovery_saved">Usuario guardado</string>
+    <string name="auth_error_recovery_invalid">Debe tener al menos 4 caracteres</string>
+    <string name="auth_error_recovery_same">Debe ser distinto de tu nombre</string>
+    <string name="login_forgot_code">¿Olvidaste el código?</string>
+    <string name="recover_title">Recuperar código</string>
+    <string name="recover_description">Escribe tu usuario de recuperación para ver los códigos de los hogares en los que sigues siendo integrante.</string>
+    <string name="recover_button">Ver códigos</string>
+    <string name="recover_close">Cerrar</string>
+    <string name="recover_none">No encontramos hogares con ese usuario. Revisa que esté bien escrito.</string>
+    <string name="profile_recovery_set">Configurado · toca para cambiarlo</string>
+    <string name="profile_recovery_missing">Sin configurar · toca para crearlo</string>
+
+    <!-- Leave household -->
+    <string name="profile_leave">Salir del hogar</string>
+    <string name="leave_title">¿Salir de %1$s?</string>
+    <string name="leave_message_member">Dejarás de ser integrante y el código de este hogar ya no aparecerá en tu recuperación. Para volver tendrás que pedir ingreso de nuevo y que el admin te acepte.</string>
+    <string name="leave_message_admin">Eres el admin: al salir, el rol pasará al integrante más antiguo del hogar. Para volver tendrás que pedir ingreso de nuevo.</string>
+    <string name="leave_message_admin_alone">Eres la única persona de este hogar. Si sales, el hogar y todos sus datos (tareas, gastos, calendario y Zori) se eliminarán para siempre.</string>
+    <string name="leave_confirm">Salir</string>
 
     <!-- Admin tools -->
     <string name="admin_edit_household">Cambiar nombre del hogar</string>

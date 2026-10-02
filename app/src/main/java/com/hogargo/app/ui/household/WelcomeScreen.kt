@@ -1,5 +1,6 @@
 package com.hogargo.app.ui.household
 
+import com.hogargo.app.data.household.RecoveredHousehold
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -63,13 +64,26 @@ fun WelcomeScreen(
     onJoinHousehold: () -> Unit,
     onSignIn: suspend (name: String, code: String) -> AuthResult,
     onSignedIn: () -> Unit,
+    onRecoverCodes: suspend (recoveryUser: String) -> List<RecoveredHousehold>,
 ) {
     var showSignIn by rememberSaveable { mutableStateOf(false) }
+    var showRecover by rememberSaveable { mutableStateOf(false) }
+
+    if (showRecover) {
+        RecoverCodesDialog(
+            onDismiss = { showRecover = false },
+            onRecover = onRecoverCodes,
+        )
+    }
 
     if (showSignIn) {
         SignInDialog(
             onDismiss = { showSignIn = false },
             onSignIn = onSignIn,
+            onForgotCode = {
+                showSignIn = false
+                showRecover = true
+            },
             onSignedIn = {
                 showSignIn = false
                 onSignedIn()
@@ -286,6 +300,7 @@ private fun FeatureChip(icon: androidx.compose.ui.graphics.vector.ImageVector, l
 private fun SignInDialog(
     onDismiss: () -> Unit,
     onSignIn: suspend (name: String, code: String) -> AuthResult,
+    onForgotCode: () -> Unit,
     onSignedIn: () -> Unit,
 ) {
     var name by rememberSaveable { mutableStateOf("") }
@@ -342,6 +357,9 @@ private fun SignInDialog(
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(top = 6.dp),
                     )
+                }
+                TextButton(onClick = onForgotCode, enabled = !loading) {
+                    Text(stringResource(R.string.login_forgot_code))
                 }
             }
         },

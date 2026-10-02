@@ -25,6 +25,26 @@ interface MemberDao {
     @Query("UPDATE members SET isApproved = 1 WHERE householdId = :householdId AND id = :id")
     suspend fun approve(householdId: String, id: String)
 
+    /** Households this recovery user still belongs to (accepted memberships only). */
+    @Query("SELECT * FROM members WHERE recoveryKey = :recoveryKey AND isApproved = 1")
+    suspend fun findApprovedByRecoveryKey(recoveryKey: String): List<MemberEntity>
+
+    @Query("UPDATE members SET recoveryKey = :recoveryKey WHERE id = :id")
+    suspend fun setRecoveryKey(id: String, recoveryKey: String)
+
+    /** Oldest accepted member other than [excludedId]: the one who inherits the admin role. */
+    @Query("SELECT * FROM members WHERE householdId = :householdId AND isApproved = 1 AND id != :excludedId ORDER BY createdAt ASC LIMIT 1")
+    suspend fun firstApprovedExcept(householdId: String, excludedId: String): MemberEntity?
+
+    @Query("UPDATE members SET isAdmin = 1 WHERE householdId = :householdId AND id = :id")
+    suspend fun makeAdmin(householdId: String, id: String)
+
+    @Query("DELETE FROM members WHERE householdId = :householdId AND id = :id")
+    suspend fun deleteById(householdId: String, id: String)
+
+    @Query("DELETE FROM members WHERE householdId = :householdId")
+    suspend fun deleteAllOfHousehold(householdId: String)
+
     @Query("DELETE FROM members WHERE householdId = :householdId AND id = :id AND isAdmin = 0")
     suspend fun deleteNonAdmin(householdId: String, id: String)
 

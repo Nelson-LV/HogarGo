@@ -15,6 +15,9 @@ interface SavingsGoalDao {
     @Query("SELECT * FROM savings_goal WHERE householdId = :householdId AND id = :id")
     suspend fun getById(householdId: String, id: Long): SavingsGoalEntity?
 
+    @Query("DELETE FROM savings_goal WHERE householdId = :householdId")
+    suspend fun deleteAllOfHousehold(householdId: String)
+
     @Delete
     suspend fun delete(goal: SavingsGoalEntity)
 

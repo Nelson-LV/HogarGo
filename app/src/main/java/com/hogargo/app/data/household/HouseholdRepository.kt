@@ -18,6 +18,8 @@ enum class AuthError {
     MEMBER_NOT_FOUND,
     CODE_TAKEN,
     PENDING_APPROVAL,
+    RECOVERY_USER_INVALID,
+    RECOVERY_USER_SAME_AS_NAME,
 }
 
 sealed interface AuthResult {
@@ -28,12 +30,16 @@ sealed interface AuthResult {
     data object Pending : AuthResult
 }
 
+/** A household the recovery user still belongs to, with its invitation code. */
+data class RecoveredHousehold(val householdName: String, val code: String, val isAdmin: Boolean)
+
 class HouseholdRepository(
     private val database: HogarGoDatabase,
     private val sessionStore: SessionStore,
 ) {
     private val householdDao = database.householdDao()
     private val memberDao = database.memberDao()
+    private val taskDao = database.taskDao()
 
     fun observeMembers(householdId: String): Flow<List<MemberEntity>> =
         memberDao.observeByHousehold(householdId)
@@ -48,17 +54,18 @@ class HouseholdRepository(
     }
 
     /** Creates a brand new household with [userName] as its admin and signs them in. */
-    suspend fun createHousehold(userName: String, householdName: String, code: String): AuthResult {
+    suspend fun createHousehold(userName: String, householdName: String, code: String, recoveryUser: String): AuthResult {
         val name = userName.trim()
         val homeName = householdName.trim()
         if (name.isEmpty()) return AuthResult.Failure(AuthError.EMPTY_NAME)
         if (homeName.isEmpty()) return AuthResult.Failure(AuthError.EMPTY_HOUSEHOLD_NAME)
+        validateRecoveryUser(name, recoveryUser)?.let { return AuthResult.Failure(it) }
         val normalized = HouseholdCode.normalize(code)
         if (normalized.length != HouseholdCode.LENGTH) return AuthResult.Failure(AuthError.INVALID_CODE)
 
         val now = System.currentTimeMillis()
         val household = HouseholdEntity(UUID.randomUUID().toString(), homeName, normalized, now)
-        val member = newMember(household.id, name, isAdmin = true, now = now)
+        val member = newMember(household.id, name, isAdmin = true, now = now, recoveryUser = recoveryUser)
 
         val created = database.withTransaction {
             if (householdDao.insert(household) == -1L) {
@@ -73,14 +80,15 @@ class HouseholdRepository(
     }
 
     /** Sends a join request to the household that owns [rawCode]; the admin must accept it. */
-    suspend fun joinHousehold(userName: String, rawCode: String): AuthResult {
+    suspend fun joinHousehold(userName: String, rawCode: String, recoveryUser: String): AuthResult {
         val name = userName.trim()
         if (name.isEmpty()) return AuthResult.Failure(AuthError.EMPTY_NAME)
+        validateRecoveryUser(name, recoveryUser)?.let { return AuthResult.Failure(it) }
         val code = HouseholdCode.normalize(rawCode)
         if (code.length != HouseholdCode.LENGTH) return AuthResult.Failure(AuthError.INVALID_CODE)
 
         val household = householdDao.findByCode(code) ?: return AuthResult.Failure(AuthError.CODE_NOT_FOUND)
-        val member = newMember(household.id, name, isAdmin = false, now = System.currentTimeMillis(), approved = false)
+        val member = newMember(household.id, name, isAdmin = false, now = System.currentTimeMillis(), approved = false, recoveryUser = recoveryUser)
         if (memberDao.insert(member) == -1L) return AuthResult.Failure(AuthError.NAME_TAKEN)
         return AuthResult.Pending
     }
@@ -113,13 +121,85 @@ class HouseholdRepository(
 
     fun signOut() = sessionStore.clear()
 
-    private fun newMember(householdId: String, name: String, isAdmin: Boolean, now: Long, approved: Boolean = true) = MemberEntity(
+    // ---- Recovery user
+
+    private fun validateRecoveryUser(name: String, rawUser: String): AuthError? {
+        val user = RecoveryUser.normalize(rawUser)
+        return when {
+            user.length < RecoveryUser.MIN_LENGTH -> AuthError.RECOVERY_USER_INVALID
+            user == name.trim().lowercase() -> AuthError.RECOVERY_USER_SAME_AS_NAME
+            else -> null
+        }
+    }
+
+    /** Sets or changes the recovery user of an existing member. Returns the error, or null on success. */
+    suspend fun setRecoveryUser(memberId: String, rawUser: String): AuthError? {
+        val member = memberDao.findById(memberId) ?: return AuthError.MEMBER_NOT_FOUND
+        validateRecoveryUser(member.name, rawUser)?.let { return it }
+        memberDao.setRecoveryKey(memberId, RecoveryUser.hash(rawUser))
+        return null
+    }
+
+    /**
+     * The codes of every household [rawUser] still belongs to. Memberships that were removed
+     * (kicked out or left) or that are still pending don't show up, so their code disappears too.
+     */
+    suspend fun recoverCodes(rawUser: String): List<RecoveredHousehold> {
+        if (RecoveryUser.normalize(rawUser).isEmpty()) return emptyList()
+        return memberDao.findApprovedByRecoveryKey(RecoveryUser.hash(rawUser)).mapNotNull { member ->
+            householdDao.findById(member.householdId)?.let {
+                RecoveredHousehold(it.name, it.code, member.isAdmin)
+            }
+        }
+    }
+
+    // ---- Leaving
+
+    /**
+     * [memberId] leaves their household. If they were the admin the role goes to the oldest
+     * remaining member; if they were the only person, the whole household is deleted.
+     */
+    suspend fun leaveHousehold(memberId: String, householdId: String) {
+        sessionStore.clear()
+        database.withTransaction { leaveInTransaction(memberId, householdId) }
+    }
+
+    private suspend fun leaveInTransaction(memberId: String, householdId: String) {
+        val me = memberDao.findById(memberId) ?: return
+        if (me.householdId != householdId) return
+
+        if (me.isAdmin) {
+            val successor = memberDao.firstApprovedExcept(householdId, memberId)
+            if (successor == null) {
+                deleteHouseholdCompletely(householdId)
+                return
+            }
+            memberDao.makeAdmin(householdId, successor.id)
+        }
+        taskDao.clearAssignee(householdId, memberId)
+        memberDao.deleteById(householdId, memberId)
+    }
+
+    private suspend fun deleteHouseholdCompletely(householdId: String) {
+        database.expenseDao().deleteAllOfHousehold(householdId)
+        database.savingsGoalDao().deleteAllOfHousehold(householdId)
+        database.petStateDao().deleteAllOfHousehold(householdId)
+        database.wardrobeItemDao().deleteAllOfHousehold(householdId)
+        database.billDao().deleteAllOfHousehold(householdId)
+        database.eventDao().deleteAllOfHousehold(householdId)
+        taskDao.deleteAllOfHousehold(householdId)
+        memberDao.deleteAllOfHousehold(householdId)
+        householdDao.deleteById(householdId)
+    }
+
+    private fun newMember(householdId: String, name: String, isAdmin: Boolean, now: Long, approved: Boolean = true, recoveryUser: String = "") = MemberEntity(
         id = UUID.randomUUID().toString(),
         householdId = householdId,
         name = name,
         nameKey = name.lowercase(),
         isAdmin = isAdmin,
         isApproved = approved,
+        recoveryKey = if (recoveryUser.isBlank()) "" else RecoveryUser.hash(recoveryUser),
         createdAt = now,
     )
 

@@ -20,5 +20,7 @@ data class MemberEntity(
     val isAdmin: Boolean = false,
     /** false = joined with the code but still waiting for the admin to accept them. */
     val isApproved: Boolean = true,
+    /** SHA-256 of the recovery user (see RecoveryUser). Empty = not configured yet. */
+    val recoveryKey: String = "",
     val createdAt: Long,
 )

@@ -14,6 +14,9 @@ interface WardrobeItemDao {
     @Query("SELECT * FROM wardrobe_items WHERE householdId = :householdId AND id = :id")
     suspend fun getOnce(householdId: String, id: String): WardrobeItemEntity?
 
+    @Query("DELETE FROM wardrobe_items WHERE householdId = :householdId")
+    suspend fun deleteAllOfHousehold(householdId: String)
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertIfAbsent(items: List<WardrobeItemEntity>)
 

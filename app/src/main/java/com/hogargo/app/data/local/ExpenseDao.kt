@@ -11,6 +11,9 @@ interface ExpenseDao {
     @Query("SELECT * FROM expenses WHERE householdId = :householdId ORDER BY date DESC, id DESC")
     fun observeAll(householdId: String): Flow<List<ExpenseEntity>>
 
+    @Query("DELETE FROM expenses WHERE householdId = :householdId")
+    suspend fun deleteAllOfHousehold(householdId: String)
+
     @Insert
     suspend fun insert(expense: ExpenseEntity)
 

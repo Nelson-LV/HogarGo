@@ -12,6 +12,9 @@ interface EventDao {
     @Query("SELECT * FROM events WHERE householdId = :householdId")
     fun getAllEvents(householdId: String): Flow<List<EventEntity>>
 
+    @Query("DELETE FROM events WHERE householdId = :householdId")
+    suspend fun deleteAllOfHousehold(householdId: String)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEvent(event: EventEntity)
 

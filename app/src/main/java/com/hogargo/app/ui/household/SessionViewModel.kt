@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.hogargo.app.data.household.ActiveSession
+import com.hogargo.app.data.household.AuthError
 import com.hogargo.app.data.household.AuthResult
+import com.hogargo.app.data.household.RecoveredHousehold
 import com.hogargo.app.data.household.HouseholdRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,11 +35,25 @@ class SessionViewModel(private val repository: HouseholdRepository) : ViewModel(
 
     suspend fun generateUniqueCode(): String = repository.generateUniqueCode()
 
-    suspend fun createHousehold(userName: String, householdName: String, code: String): AuthResult =
-        repository.createHousehold(userName, householdName, code).also(::apply)
+    suspend fun createHousehold(userName: String, householdName: String, code: String, recoveryUser: String): AuthResult =
+        repository.createHousehold(userName, householdName, code, recoveryUser).also(::apply)
 
-    suspend fun joinHousehold(userName: String, code: String): AuthResult =
-        repository.joinHousehold(userName, code).also(::apply)
+    suspend fun joinHousehold(userName: String, code: String, recoveryUser: String): AuthResult =
+        repository.joinHousehold(userName, code, recoveryUser).also(::apply)
+
+    suspend fun recoverCodes(recoveryUser: String): List<RecoveredHousehold> =
+        repository.recoverCodes(recoveryUser)
+
+    suspend fun setRecoveryUser(memberId: String, recoveryUser: String): AuthError? =
+        repository.setRecoveryUser(memberId, recoveryUser)
+
+    /** The signed-in person leaves their household for good (see HouseholdRepository.leaveHousehold). */
+    fun leaveHousehold() {
+        val current = (_state.value as? SessionState.LoggedIn)?.session ?: return
+        // Log out first so the UI never reacts to "my own member row disappeared".
+        _state.value = SessionState.LoggedOut
+        viewModelScope.launch { repository.leaveHousehold(current.member.id, current.household.id) }
+    }
 
     suspend fun signIn(userName: String, code: String): AuthResult =
         repository.signIn(userName, code).also(::apply)

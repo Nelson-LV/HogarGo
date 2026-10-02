@@ -17,6 +17,9 @@ interface HouseholdDao {
     @Query("SELECT * FROM households WHERE id = :id LIMIT 1")
     fun observeById(id: String): Flow<HouseholdEntity?>
 
+    @Query("DELETE FROM households WHERE id = :id")
+    suspend fun deleteById(id: String)
+
     @Query("UPDATE households SET name = :name WHERE id = :id")
     suspend fun updateName(id: String, name: String)
 

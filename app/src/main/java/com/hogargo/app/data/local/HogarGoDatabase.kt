@@ -25,7 +25,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         HouseholdEntity::class,
         MemberEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -56,6 +56,12 @@ abstract class HogarGoDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE members ADD COLUMN recoveryKey TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         @Volatile
         private var instance: HogarGoDatabase? = null
 
@@ -66,7 +72,7 @@ abstract class HogarGoDatabase : RoomDatabase() {
                     HogarGoDatabase::class.java,
                     "hogargo.db",
                 )
-                    .addMigrations(MIGRATION_4_5, MIGRATION_6_7)
+                    .addMigrations(MIGRATION_4_5, MIGRATION_6_7, MIGRATION_7_8)
                     // Pre-release schema: destroy & recreate on bump instead of writing migrations.
                     .fallbackToDestructiveMigration(dropAllTables = true)
                     .build().also { instance = it }

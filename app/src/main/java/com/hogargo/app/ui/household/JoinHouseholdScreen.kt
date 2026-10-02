@@ -1,5 +1,7 @@
 package com.hogargo.app.ui.household
 
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -61,12 +63,13 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun JoinHouseholdScreen(
-    onJoin: suspend (name: String, code: String) -> AuthResult,
+    onJoin: suspend (name: String, code: String, recoveryUser: String) -> AuthResult,
     onJoined: () -> Unit,
     onCreateInstead: () -> Unit,
 ) {
     var name by rememberSaveable { mutableStateOf("") }
     var code by rememberSaveable { mutableStateOf("") }
+    var recoveryUser by rememberSaveable { mutableStateOf("") }
     var error by remember { mutableStateOf<AuthError?>(null) }
     var loading by remember { mutableStateOf(false) }
     var requestSent by rememberSaveable { mutableStateOf(false) }
@@ -78,7 +81,7 @@ fun JoinHouseholdScreen(
         focusManager.clearFocus()
         loading = true
         scope.launch {
-            when (val result = onJoin(name, code)) {
+            when (val result = onJoin(name, code, recoveryUser)) {
                 is AuthResult.Success -> onJoined()
                 is AuthResult.Pending -> {
                     requestSent = true
@@ -179,9 +182,26 @@ fun JoinHouseholdScreen(
                 value = name,
                 onValueChange = { name = it; error = null; requestSent = false },
                 placeholder = stringResource(R.string.join_name_hint),
-                errorText = error?.takeIf { !it.isCodeError() }?.let { stringResource(it.messageRes()) },
+                errorText = error?.takeIf { !it.isCodeError() && !it.isRecoveryError() }?.let { stringResource(it.messageRes()) },
                 imeAction = ImeAction.Next,
                 onImeAction = { focusManager.moveFocus(FocusDirection.Down) },
+            )
+            Spacer(Modifier.height(8.dp))
+            FieldLabel(stringResource(R.string.recovery_label), Icons.Filled.Lock)
+            HogarTextField(
+                value = recoveryUser,
+                onValueChange = { recoveryUser = it; error = null; requestSent = false },
+                placeholder = stringResource(R.string.recovery_hint),
+                errorText = error?.takeIf { it.isRecoveryError() }?.let { stringResource(it.messageRes()) },
+                imeAction = ImeAction.Next,
+                onImeAction = { focusManager.moveFocus(FocusDirection.Down) },
+                capitalization = KeyboardCapitalization.None,
+            )
+            Text(
+                text = stringResource(R.string.recovery_help),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 4.dp, top = 2.dp),
             )
             Spacer(Modifier.height(8.dp))
             FieldLabel(stringResource(R.string.join_code_label), Icons.Filled.Pin)

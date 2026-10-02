@@ -59,11 +59,16 @@ fun AuthError.messageRes(): Int = when (this) {
     AuthError.MEMBER_NOT_FOUND -> R.string.auth_error_member_not_found
     AuthError.CODE_TAKEN -> R.string.auth_error_code_taken
     AuthError.PENDING_APPROVAL -> R.string.auth_error_pending_approval
+    AuthError.RECOVERY_USER_INVALID -> R.string.auth_error_recovery_invalid
+    AuthError.RECOVERY_USER_SAME_AS_NAME -> R.string.auth_error_recovery_same
 }
 
 /** Which field an [AuthError] should be shown under. */
 fun AuthError.isCodeError(): Boolean =
     this == AuthError.INVALID_CODE || this == AuthError.CODE_NOT_FOUND || this == AuthError.CODE_TAKEN
+
+fun AuthError.isRecoveryError(): Boolean =
+    this == AuthError.RECOVERY_USER_INVALID || this == AuthError.RECOVERY_USER_SAME_AS_NAME
 
 /** Peach circle with a house icon and a small badge, used at the top of the Join / Create cards. */
 @Composable
@@ -113,6 +118,7 @@ fun HogarTextField(
     errorText: String? = null,
     imeAction: ImeAction = ImeAction.Next,
     onImeAction: () -> Unit = {},
+    capitalization: KeyboardCapitalization = KeyboardCapitalization.Words,
 ) {
     OutlinedTextField(
         value = value,
@@ -127,7 +133,7 @@ fun HogarTextField(
             null
         },
         shape = RoundedCornerShape(12.dp),
-        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = imeAction),
+        keyboardOptions = KeyboardOptions(capitalization = capitalization, imeAction = imeAction),
         keyboardActions = KeyboardActions(onNext = { onImeAction() }, onDone = { onImeAction() }),
     )
 }

@@ -151,6 +151,15 @@ private fun HogarGoAppContent(sessionViewModel: SessionViewModel, startLoggedIn:
             onRemoveMember = { appViewModel.removeMember(it.id) },
             onApproveMember = { appViewModel.approveMember(it.id) },
             onRejectMember = { appViewModel.rejectMember(it.id) },
+            onLeaveHousehold = {
+                showProfile = false
+                sessionViewModel.leaveHousehold()
+                navController.navigate(Routes.WELCOME) {
+                    popUpTo(Routes.HOME) { inclusive = true }
+                    launchSingleTop = true
+                }
+            },
+            onSetRecoveryUser = { user -> sessionViewModel.setRecoveryUser(session.member.id, user) },
             onDismiss = { showProfile = false },
             onSignOut = {
                 showProfile = false
@@ -211,13 +220,14 @@ private fun HogarGoAppContent(sessionViewModel: SessionViewModel, startLoggedIn:
                     onJoinHousehold = { navController.navigate(Routes.JOIN) },
                     onSignIn = { name, code -> sessionViewModel.signIn(name, code) },
                     onSignedIn = goHome,
+                    onRecoverCodes = { user -> sessionViewModel.recoverCodes(user) },
                 )
             }
             composable(Routes.CREATE) {
                 CreateHouseholdScreen(
                     generateCode = { sessionViewModel.generateUniqueCode() },
-                    onCreate = { userName, householdName, code ->
-                        sessionViewModel.createHousehold(userName, householdName, code)
+                    onCreate = { userName, householdName, code, recoveryUser ->
+                        sessionViewModel.createHousehold(userName, householdName, code, recoveryUser)
                     },
                     onCreated = goHome,
                     onJoinInstead = {
@@ -230,7 +240,7 @@ private fun HogarGoAppContent(sessionViewModel: SessionViewModel, startLoggedIn:
             }
             composable(Routes.JOIN) {
                 JoinHouseholdScreen(
-                    onJoin = { name, code -> sessionViewModel.joinHousehold(name, code) },
+                    onJoin = { name, code, recoveryUser -> sessionViewModel.joinHousehold(name, code, recoveryUser) },
                     onJoined = goHome,
                     onCreateInstead = {
                         navController.navigate(Routes.CREATE) {

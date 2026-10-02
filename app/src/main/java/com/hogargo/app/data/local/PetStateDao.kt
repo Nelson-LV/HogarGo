@@ -14,6 +14,9 @@ interface PetStateDao {
     @Query("SELECT * FROM pet_state WHERE householdId = :householdId")
     suspend fun getOnce(householdId: String): PetStateEntity?
 
+    @Query("DELETE FROM pet_state WHERE householdId = :householdId")
+    suspend fun deleteAllOfHousehold(householdId: String)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(state: PetStateEntity)
 }
