@@ -117,6 +117,22 @@ private fun HogarGoAppContent(sessionViewModel: SessionViewModel, startLoggedIn:
         )
     }
 
+    // If the admin removes this person while the app is open, send them back to Welcome.
+    if (appViewModel != null && activeSession != null) {
+        val liveState by appViewModel.uiState.collectAsState()
+        val removed = liveState.members.isNotEmpty() && liveState.currentMember == null
+        LaunchedEffect(removed) {
+            if (removed) {
+                showProfile = false
+                sessionViewModel.signOut()
+                navController.navigate(Routes.WELCOME) {
+                    popUpTo(Routes.HOME) { inclusive = true }
+                    launchSingleTop = true
+                }
+            }
+        }
+    }
+
     val goHome: () -> Unit = {
         navController.navigate(Routes.HOME) {
             popUpTo(Routes.WELCOME) { inclusive = true }
@@ -129,6 +145,12 @@ private fun HogarGoAppContent(sessionViewModel: SessionViewModel, startLoggedIn:
         ProfileDialog(
             session = session,
             members = uiState.members,
+            pendingMembers = uiState.pendingMembers,
+            householdName = uiState.household?.name ?: session.household.name,
+            onRenameHousehold = appViewModel::renameHousehold,
+            onRemoveMember = { appViewModel.removeMember(it.id) },
+            onApproveMember = { appViewModel.approveMember(it.id) },
+            onRejectMember = { appViewModel.rejectMember(it.id) },
             onDismiss = { showProfile = false },
             onSignOut = {
                 showProfile = false

@@ -18,5 +18,7 @@ data class MemberEntity(
     val name: String,
     val nameKey: String,
     val isAdmin: Boolean = false,
+    /** false = joined with the code but still waiting for the admin to accept them. */
+    val isApproved: Boolean = true,
     val createdAt: Long,
 )

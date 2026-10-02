@@ -98,6 +98,7 @@ fun CreateHouseholdScreen(
         scope.launch {
             when (val result = onCreate(userName, householdName, code)) {
                 is AuthResult.Success -> onCreated()
+                is AuthResult.Pending -> loading = false
                 is AuthResult.Failure -> {
                     error = result.error
                     if (result.error == AuthError.CODE_TAKEN) code = generateCode()

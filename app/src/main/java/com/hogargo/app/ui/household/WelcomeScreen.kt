@@ -300,6 +300,7 @@ private fun SignInDialog(
         scope.launch {
             when (val result = onSignIn(name, code)) {
                 is AuthResult.Success -> onSignedIn()
+                is AuthResult.Pending -> loading = false
                 is AuthResult.Failure -> {
                     error = result.error
                     loading = false

@@ -17,6 +17,9 @@ interface HouseholdDao {
     @Query("SELECT * FROM households WHERE id = :id LIMIT 1")
     fun observeById(id: String): Flow<HouseholdEntity?>
 
+    @Query("UPDATE households SET name = :name WHERE id = :id")
+    suspend fun updateName(id: String, name: String)
+
     /** Returns -1 when the unique code is already taken (nothing is inserted). */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(household: HouseholdEntity): Long

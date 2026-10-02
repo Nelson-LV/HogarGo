@@ -17,11 +17,15 @@ enum class AuthError {
     NAME_TAKEN,
     MEMBER_NOT_FOUND,
     CODE_TAKEN,
+    PENDING_APPROVAL,
 }
 
 sealed interface AuthResult {
     data class Success(val session: ActiveSession) : AuthResult
     data class Failure(val error: AuthError) : AuthResult
+
+    /** The request was sent; the admin still has to accept it before the person can get in. */
+    data object Pending : AuthResult
 }
 
 class HouseholdRepository(
@@ -68,7 +72,7 @@ class HouseholdRepository(
         return AuthResult.Success(open(member, household))
     }
 
-    /** Adds [userName] to the household that owns [rawCode] (and only that one) and signs them in. */
+    /** Sends a join request to the household that owns [rawCode]; the admin must accept it. */
     suspend fun joinHousehold(userName: String, rawCode: String): AuthResult {
         val name = userName.trim()
         if (name.isEmpty()) return AuthResult.Failure(AuthError.EMPTY_NAME)
@@ -76,9 +80,9 @@ class HouseholdRepository(
         if (code.length != HouseholdCode.LENGTH) return AuthResult.Failure(AuthError.INVALID_CODE)
 
         val household = householdDao.findByCode(code) ?: return AuthResult.Failure(AuthError.CODE_NOT_FOUND)
-        val member = newMember(household.id, name, isAdmin = false, now = System.currentTimeMillis())
+        val member = newMember(household.id, name, isAdmin = false, now = System.currentTimeMillis(), approved = false)
         if (memberDao.insert(member) == -1L) return AuthResult.Failure(AuthError.NAME_TAKEN)
-        return AuthResult.Success(open(member, household))
+        return AuthResult.Pending
     }
 
     /** Signs back in as an existing member of the household that owns [rawCode]. */
@@ -91,6 +95,7 @@ class HouseholdRepository(
         val household = householdDao.findByCode(code) ?: return AuthResult.Failure(AuthError.CODE_NOT_FOUND)
         val member = memberDao.findByName(household.id, name.lowercase())
             ?: return AuthResult.Failure(AuthError.MEMBER_NOT_FOUND)
+        if (!member.isApproved) return AuthResult.Failure(AuthError.PENDING_APPROVAL)
         return AuthResult.Success(open(member, household))
     }
 
@@ -99,7 +104,7 @@ class HouseholdRepository(
         val memberId = sessionStore.memberId ?: return null
         val member = memberDao.findById(memberId)
         val household = member?.let { householdDao.findById(it.householdId) }
-        if (member == null || household == null) {
+        if (member == null || household == null || !member.isApproved) {
             sessionStore.clear()
             return null
         }
@@ -108,12 +113,13 @@ class HouseholdRepository(
 
     fun signOut() = sessionStore.clear()
 
-    private fun newMember(householdId: String, name: String, isAdmin: Boolean, now: Long) = MemberEntity(
+    private fun newMember(householdId: String, name: String, isAdmin: Boolean, now: Long, approved: Boolean = true) = MemberEntity(
         id = UUID.randomUUID().toString(),
         householdId = householdId,
         name = name,
         nameKey = name.lowercase(),
         isAdmin = isAdmin,
+        isApproved = approved,
         createdAt = now,
     )
 
