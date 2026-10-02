@@ -1,6 +1,5 @@
 package com.hogargo.app.data
 
-import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
@@ -12,12 +11,6 @@ enum class TaskCategory(@StringRes val labelRes: Int) {
     GENERAL(R.string.category_general),
     CLEANING(R.string.category_cleaning),
 }
-
-data class FamilyMember(
-    val id: String,
-    @StringRes val nameRes: Int,
-    @DrawableRes val avatarRes: Int,
-)
 
 data class HouseTask(
     val id: String,

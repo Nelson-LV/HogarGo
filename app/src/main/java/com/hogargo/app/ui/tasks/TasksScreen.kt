@@ -41,7 +41,8 @@ import androidx.compose.ui.unit.dp
 import com.hogargo.app.R
 import com.hogargo.app.data.AppViewModel
 import com.hogargo.app.data.HouseTask
-import com.hogargo.app.data.familyMember
+import com.hogargo.app.data.local.MemberEntity
+import com.hogargo.app.ui.components.MemberAvatar
 import com.hogargo.app.data.getDisplayTitle
 import com.hogargo.app.ui.theme.BrandBrownStrong
 import com.hogargo.app.ui.theme.BrandOrange
@@ -70,7 +71,7 @@ fun TasksScreen(appViewModel: AppViewModel, onProposeNewTask: () -> Unit) {
         Box(Modifier.size(16.dp))
 
         uiState.tasks.forEach { task ->
-            TaskCard(task = task, onToggle = { appViewModel.toggleTaskCompleted(task.id) })
+            TaskCard(task = task, members = uiState.members, onToggle = { appViewModel.toggleTaskCompleted(task.id) })
             Box(Modifier.size(16.dp))
         }
 
@@ -127,8 +128,9 @@ private fun StreakBanner(streakDays: Int) {
 }
 
 @Composable
-private fun TaskCard(task: HouseTask, onToggle: () -> Unit) {
-    val assignee = familyMember(task.assigneeId)
+private fun TaskCard(task: HouseTask, members: List<MemberEntity>, onToggle: () -> Unit) {
+    // assigneeId is a member id, or a free-text name typed under "Otro".
+    val assignee = members.firstOrNull { it.id == task.assigneeId }
     Card(
         colors = CardDefaults.cardColors(
             containerColor = if (task.completed) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surface,
@@ -158,7 +160,7 @@ private fun TaskCard(task: HouseTask, onToggle: () -> Unit) {
                         color = if (task.completed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                     )
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        val assigneeName = assignee?.let { stringResource(it.nameRes) } ?: task.assigneeId
+                        val assigneeName = assignee?.name ?: task.assigneeId
                         if (task.completed && assigneeName != null) {
                             Text(
                                 text = stringResource(R.string.tasks_completed_by, assigneeName),
@@ -188,15 +190,11 @@ private fun TaskCard(task: HouseTask, onToggle: () -> Unit) {
                     }
                     if (assignee != null) {
                         Box(Modifier.size(8.dp))
-                        Image(
-                            painter = painterResource(assignee.avatarRes),
-                            contentDescription = stringResource(assignee.nameRes),
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .border(2.dp, MaterialTheme.colorScheme.surfaceContainerHighest, CircleShape)
-                                .alpha(if (task.completed) 0.7f else 1f),
+                        MemberAvatar(
+                            name = assignee.name,
+                            size = 32.dp,
+                            borderColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            modifier = Modifier.alpha(if (task.completed) 0.7f else 1f),
                         )
                     } else if (!task.assigneeId.isNullOrBlank()) {
                         Box(Modifier.size(8.dp))

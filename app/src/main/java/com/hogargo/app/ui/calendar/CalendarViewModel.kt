@@ -21,10 +21,6 @@ class CalendarViewModel(private val repository: CalendarRepository) : ViewModel(
     val events: StateFlow<List<EventEntity>> = repository.events
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    init {
-        viewModelScope.launch { repository.refreshOnOpen() }
-    }
-
     fun addBill(title: String, amount: Double, dueDate: LocalDate) {
         viewModelScope.launch { repository.addBill(title, amount, dueDate) }
     }

@@ -2,13 +2,13 @@ package com.hogargo.app.data.local
 
 import androidx.annotation.StringRes
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 import com.hogargo.app.data.HouseTask
 import com.hogargo.app.data.TaskCategory
 
-@Entity(tableName = "tasks")
+@Entity(tableName = "tasks", primaryKeys = ["householdId", "id"])
 data class TaskEntity(
-    @PrimaryKey val id: String,
+    val householdId: String,
+    val id: String,
     @get:StringRes val titleRes: Int? = null,
     val titleText: String? = null,
     val category: TaskCategory,
@@ -35,8 +35,9 @@ fun TaskEntity.toHouseTask(): HouseTask {
     )
 }
 
-fun HouseTask.toTaskEntity(): TaskEntity {
+fun HouseTask.toTaskEntity(householdId: String): TaskEntity {
     return TaskEntity(
+        householdId = householdId,
         id = id,
         titleRes = titleRes,
         titleText = titleText,

@@ -9,20 +9,14 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface EventDao {
-    @Query("SELECT * FROM events")
-    fun getAllEvents(): Flow<List<EventEntity>>
+    @Query("SELECT * FROM events WHERE householdId = :householdId")
+    fun getAllEvents(householdId: String): Flow<List<EventEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEvent(event: EventEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertEvents(events: List<EventEntity>)
-
-    @Query("UPDATE events SET done = :done WHERE id = :id")
-    suspend fun updateEventDone(id: String, done: Boolean)
-
-    @Query("SELECT COUNT(*) FROM events")
-    suspend fun getEventCount(): Int
+    @Query("UPDATE events SET done = :done WHERE householdId = :householdId AND id = :id")
+    suspend fun updateEventDone(householdId: String, id: String, done: Boolean)
 
     @Delete
     suspend fun deleteEvent(event: EventEntity)

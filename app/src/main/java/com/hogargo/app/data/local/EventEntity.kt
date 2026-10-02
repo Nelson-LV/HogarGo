@@ -1,11 +1,11 @@
 package com.hogargo.app.data.local
 
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 
-@Entity(tableName = "events")
+@Entity(tableName = "events", primaryKeys = ["householdId", "id"])
 data class EventEntity(
-    @PrimaryKey val id: String,
+    val householdId: String,
+    val id: String,
     val title: String,
     val dateLabel: String,
     val timeLabel: String? = null,

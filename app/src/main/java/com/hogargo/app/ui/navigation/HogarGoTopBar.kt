@@ -1,6 +1,6 @@
 package com.hogargo.app.ui.navigation
 
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -27,10 +27,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hogargo.app.R
+import com.hogargo.app.ui.components.MemberAvatar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HogarGoTopBar(onRewardsClick: () -> Unit = {}) {
+fun HogarGoTopBar(memberName: String, onProfileClick: () -> Unit, onRewardsClick: () -> Unit = {}) {
     CenterAlignedTopAppBar(
         title = {
             Text(
@@ -40,21 +41,15 @@ fun HogarGoTopBar(onRewardsClick: () -> Unit = {}) {
             )
         },
         navigationIcon = {
-            Box(
+            MemberAvatar(
+                name = memberName,
+                size = 40.dp,
+                borderColor = MaterialTheme.colorScheme.primaryContainer,
                 modifier = Modifier
                     .padding(start = 12.dp)
-                    .size(40.dp)
                     .clip(CircleShape)
-                    .border(2.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.avatar_user),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
+                    .clickable(onClickLabel = stringResource(R.string.profile_cd), onClick = onProfileClick),
+            )
         },
         actions = {
             IconButton(onClick = onRewardsClick) {

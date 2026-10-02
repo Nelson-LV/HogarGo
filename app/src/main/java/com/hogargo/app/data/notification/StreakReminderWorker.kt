@@ -6,6 +6,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.hogargo.app.data.household.SessionStore
 import com.hogargo.app.data.local.HogarGoDatabase
 import kotlinx.coroutines.flow.first
 import java.text.SimpleDateFormat
@@ -24,7 +25,9 @@ class StreakReminderWorker(
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
-        val tasks = HogarGoDatabase.getInstance(applicationContext).taskDao().getAllTasks().first()
+        // No one signed in on this device -> nothing to remind about.
+        val householdId = SessionStore(applicationContext).householdId ?: return Result.success()
+        val tasks = HogarGoDatabase.getInstance(applicationContext).taskDao().getAllTasks(householdId).first()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val today = dateFormat.format(Date())
         val yesterday = dateFormat.format(

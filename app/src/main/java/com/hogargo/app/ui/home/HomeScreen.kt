@@ -78,7 +78,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hogargo.app.HogarGoApplication
 import com.hogargo.app.R
 import com.hogargo.app.data.AppViewModel
-import com.hogargo.app.data.FamilyMembers
+import com.hogargo.app.data.local.MemberEntity
+import com.hogargo.app.ui.components.MemberAvatar
 import com.hogargo.app.data.local.SavingsGoalEntity
 import com.hogargo.app.data.HouseTask
 import com.hogargo.app.data.getDisplayTitle
@@ -98,15 +99,25 @@ private const val MaxHomeGoals = 3
 @Composable
 fun HomeScreen(
     appViewModel: AppViewModel,
+    householdId: String,
     onNewTask: () -> Unit,
     onOpenFinance: () -> Unit = {},
     onOpenPet: () -> Unit = {},
     onOpenAbout: () -> Unit = {},
 ) {
     val application = LocalContext.current.applicationContext as HogarGoApplication
-    val financeViewModel: FinanceViewModel = viewModel(factory = FinanceViewModel.factory(application.financeRepository))
-    val petViewModel: PetViewModel = viewModel(factory = PetViewModel.factory(application.petRepository))
-    val calendarViewModel: CalendarViewModel = viewModel(factory = CalendarViewModel.factory(application.calendarRepository))
+    val financeViewModel: FinanceViewModel = viewModel(
+        key = "finance_$householdId",
+        factory = FinanceViewModel.factory(application.financeRepository(householdId)),
+    )
+    val petViewModel: PetViewModel = viewModel(
+        key = "pet_$householdId",
+        factory = PetViewModel.factory(application.petRepository(householdId)),
+    )
+    val calendarViewModel: CalendarViewModel = viewModel(
+        key = "calendar_$householdId",
+        factory = CalendarViewModel.factory(application.calendarRepository(householdId)),
+    )
 
     val uiState by appViewModel.uiState.collectAsState()
     val financeState by financeViewModel.uiState.collectAsState()
@@ -136,6 +147,7 @@ fun HomeScreen(
 
     if (showMoreBottomSheet) {
         MoreBottomSheet(
+            members = uiState.members,
             onOpenAbout = {
                 showMoreBottomSheet = false
                 onOpenAbout()
@@ -152,7 +164,9 @@ fun HomeScreen(
     ) {
         Box(Modifier.height(16.dp))
         Text(
-            text = stringResource(R.string.home_greeting),
+            text = uiState.currentMember?.name
+                ?.let { stringResource(R.string.home_greeting_named, it) }
+                ?: stringResource(R.string.home_greeting),
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.onBackground,
         )
@@ -221,13 +235,14 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MoreBottomSheet(
+    members: List<MemberEntity>,
     onOpenAbout: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     var showMembersDialog by rememberSaveable { mutableStateOf(false) }
 
     if (showMembersDialog) {
-        HouseholdMembersDialog(onDismiss = { showMembersDialog = false })
+        HouseholdMembersDialog(members = members, onDismiss = { showMembersDialog = false })
     }
 
     ModalBottomSheet(
@@ -317,7 +332,7 @@ private fun MoreOptionRow(
 }
 
 @Composable
-private fun HouseholdMembersDialog(onDismiss: () -> Unit) {
+private fun HouseholdMembersDialog(members: List<MemberEntity>, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -334,22 +349,20 @@ private fun HouseholdMembersDialog(onDismiss: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    FamilyMembers.forEach { member ->
+                    members.forEach { member ->
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Image(
-                                painter = painterResource(member.avatarRes),
-                                contentDescription = stringResource(member.nameRes),
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(56.dp)
-                                    .clip(CircleShape)
-                                    .border(2.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape),
+                            MemberAvatar(
+                                name = member.name,
+                                size = 56.dp,
+                                borderColor = MaterialTheme.colorScheme.primaryContainer,
                             )
                             Text(
-                                text = stringResource(member.nameRes),
+                                text = member.name,
                                 style = MaterialTheme.typography.labelMedium,
                                 modifier = Modifier.padding(top = 6.dp),
                             )

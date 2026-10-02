@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ExpenseDao {
-    @Query("SELECT * FROM expenses ORDER BY date DESC, id DESC")
-    fun observeAll(): Flow<List<ExpenseEntity>>
+    @Query("SELECT * FROM expenses WHERE householdId = :householdId ORDER BY date DESC, id DESC")
+    fun observeAll(householdId: String): Flow<List<ExpenseEntity>>
 
     @Insert
     suspend fun insert(expense: ExpenseEntity)

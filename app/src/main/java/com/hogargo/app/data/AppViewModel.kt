@@ -4,6 +4,9 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.hogargo.app.data.local.HogarGoDatabase
+import com.hogargo.app.data.local.HouseholdEntity
+import com.hogargo.app.data.local.MemberEntity
+import com.hogargo.app.data.local.TaskEntity
 import com.hogargo.app.data.local.toHouseTask
 import com.hogargo.app.data.local.toTaskEntity
 import com.hogargo.app.data.network.AdviceRepository
@@ -27,40 +30,64 @@ data class AppUiState(
     val streakDays: Int = 4,
     val dailyAdvice: String = "Organizar tu hogar un poco cada día hace que la convivencia sea más feliz.",
     val isLoadingAdvice: Boolean = false,
+    /** Everyone in the current household (including [currentMember]). */
+    val members: List<MemberEntity> = emptyList(),
+    /** The person using this device. */
+    val currentMember: MemberEntity? = null,
+    val household: HouseholdEntity? = null,
 )
 
-class AppViewModel(application: Application) : AndroidViewModel(application) {
+private data class HouseholdData(
+    val tasks: List<TaskEntity>,
+    val next: TaskEntity?,
+    val members: List<MemberEntity>,
+    val household: HouseholdEntity?,
+)
+
+/** Scoped to one household: it only ever reads and writes that household's rows. */
+class AppViewModel(
+    application: Application,
+    private val householdId: String,
+    private val memberId: String,
+) : AndroidViewModel(application) {
 
     private val db = HogarGoDatabase.getInstance(application)
     private val taskDao = db.taskDao()
+    private val memberDao = db.memberDao()
+    private val householdDao = db.householdDao()
     private val adviceRepository = AdviceRepository()
 
     private val _dailyAdvice = MutableStateFlow("Organizar tu hogar un poco cada día hace que la convivencia sea más feliz.")
     private val _isLoadingAdvice = MutableStateFlow(false)
 
     init {
-        viewModelScope.launch {
-            if (taskDao.getTaskCount() == 0) {
-                taskDao.insertTasks(InitialTasks.map { it.toTaskEntity() })
-            }
-            fetchDailyAdvice()
-        }
+        fetchDailyAdvice()
+    }
+
+    private val householdData = combine(
+        taskDao.getAllTasks(householdId),
+        taskDao.getNextPendingTask(householdId),
+        memberDao.observeByHousehold(householdId),
+        householdDao.observeById(householdId),
+    ) { tasks, next, members, household ->
+        HouseholdData(tasks, next, members, household)
     }
 
     val uiState: StateFlow<AppUiState> = combine(
-        combine(taskDao.getAllTasks(), taskDao.getNextPendingTask()) { tasks, next ->
-            Pair(tasks, next)
-        },
+        householdData,
         _dailyAdvice,
         _isLoadingAdvice,
-    ) { (tasks, next), advice, isLoading ->
-        val tasksList = tasks.map { it.toHouseTask() }
+    ) { data, advice, isLoading ->
+        val tasksList = data.tasks.map { it.toHouseTask() }
         AppUiState(
             tasks = tasksList,
-            nextTask = next?.toHouseTask(),
+            nextTask = data.next?.toHouseTask(),
             streakDays = calculateStreakDays(tasksList),
             dailyAdvice = advice,
             isLoadingAdvice = isLoading,
+            members = data.members,
+            currentMember = data.members.firstOrNull { it.id == memberId },
+            household = data.household,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -115,13 +142,13 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun toggleTaskCompleted(taskId: String) {
         viewModelScope.launch {
-            val task = taskDao.getTaskById(taskId)
+            val task = taskDao.getTaskById(householdId, taskId)
             if (task != null) {
                 val newCompleted = !task.completed
                 val completedDate = if (newCompleted) {
                     SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
                 } else null
-                taskDao.updateTaskCompleted(taskId, newCompleted, completedDate)
+                taskDao.updateTaskCompleted(householdId, taskId, newCompleted, completedDate)
             }
         }
     }
@@ -143,7 +170,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 assigneeId = assigneeId,
                 coinReward = coinReward,
             )
-            taskDao.insertTask(newTask.toTaskEntity())
+            taskDao.insertTask(newTask.toTaskEntity(householdId))
         }
     }
 }

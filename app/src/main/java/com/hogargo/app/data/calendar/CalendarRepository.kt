@@ -8,26 +8,16 @@ import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 import java.util.UUID
 
-private val InitialEvents = listOf(
-    EventEntity("vacuum_living_room", "Aspirar la sala de estar", "Hoy • 16:00"),
-    EventEntity("water_plants", "Regar las plantas del balcón", "Mañana"),
-)
-
 class CalendarRepository(
+    private val householdId: String,
     private val billDao: BillDao,
     private val eventDao: EventDao,
 ) {
-    val bills: Flow<List<BillEntity>> = billDao.observeAll()
-    val events: Flow<List<EventEntity>> = eventDao.getAllEvents()
-
-    suspend fun refreshOnOpen() {
-        if (eventDao.getEventCount() == 0) {
-            eventDao.insertEvents(InitialEvents)
-        }
-    }
+    val bills: Flow<List<BillEntity>> = billDao.observeAll(householdId)
+    val events: Flow<List<EventEntity>> = eventDao.getAllEvents(householdId)
 
     suspend fun addBill(title: String, amount: Double, dueDate: LocalDate) {
-        billDao.insert(BillEntity(title = title, amount = amount, dueDate = dueDate))
+        billDao.insert(BillEntity(householdId = householdId, title = title, amount = amount, dueDate = dueDate))
     }
 
     suspend fun togglePaid(bill: BillEntity) {
@@ -39,13 +29,14 @@ class CalendarRepository(
     }
 
     suspend fun toggleEventDone(eventId: String, currentDone: Boolean) {
-        eventDao.updateEventDone(eventId, !currentDone)
+        eventDao.updateEventDone(householdId, eventId, !currentDone)
     }
 
     suspend fun addEvent(title: String, dateLabel: String, timeLabel: String? = null) {
         val formattedDate = if (!timeLabel.isNullOrBlank()) "$dateLabel • $timeLabel" else dateLabel
         eventDao.insertEvent(
             EventEntity(
+                householdId = householdId,
                 id = UUID.randomUUID().toString(),
                 title = title,
                 dateLabel = formattedDate,

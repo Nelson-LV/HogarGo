@@ -15,8 +15,14 @@ import androidx.compose.material.icons.outlined.Savings
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.hogargo.app.R
 
-/** Routes used by the NavHost. NEW_TASK and ABOUT have no bottom-nav entry (opened on top of Home/Tasks). */
+/**
+ * Routes used by the NavHost. WELCOME / JOIN / CREATE are the pre-login flow (no bars);
+ * NEW_TASK and ABOUT have no bottom-nav entry (opened on top of Home/Tasks).
+ */
 object Routes {
+    const val WELCOME = "welcome"
+    const val JOIN = "join_household"
+    const val CREATE = "create_household"
     const val HOME = "home"
     const val TASKS = "tasks"
     const val FINANCE = "finance"

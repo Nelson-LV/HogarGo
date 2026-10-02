@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,6 +40,8 @@ import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -57,7 +60,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.hogargo.app.R
 import com.hogargo.app.data.AppViewModel
-import com.hogargo.app.data.FamilyMembers
+import com.hogargo.app.ui.components.MemberAvatar
 import com.hogargo.app.data.TaskCategory
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -73,7 +76,13 @@ fun NewTaskScreen(appViewModel: AppViewModel, onBack: () -> Unit) {
     var title by rememberSaveable { mutableStateOf("") }
     var selectedCategory by rememberSaveable { mutableStateOf(TaskCategory.KITCHEN) }
     var reward by rememberSaveable { mutableFloatStateOf(30f) }
-    var selectedAssignee by rememberSaveable { mutableStateOf<String?>(FamilyMembers.first().id) }
+    val uiState by appViewModel.uiState.collectAsState()
+    val members = uiState.members
+    // Whoever is creating the task is the default assignee.
+    var selectedAssignee by rememberSaveable { mutableStateOf<String?>(null) }
+    LaunchedEffect(uiState.currentMember?.id) {
+        if (selectedAssignee == null) selectedAssignee = uiState.currentMember?.id
+    }
     var customAssigneeName by rememberSaveable { mutableStateOf("") }
 
     var dueFormattedDate by rememberSaveable {
@@ -86,7 +95,7 @@ fun NewTaskScreen(appViewModel: AppViewModel, onBack: () -> Unit) {
     var showCustomAssigneeDialog by rememberSaveable { mutableStateOf(false) }
 
     val isOtherSelected = selectedAssignee == "other" ||
-        (selectedAssignee != null && FamilyMembers.none { it.id == selectedAssignee })
+        (selectedAssignee != null && members.none { it.id == selectedAssignee })
 
     if (showDatePickerDialog) {
         val datePickerState = rememberDatePickerState()
@@ -289,11 +298,13 @@ fun NewTaskScreen(appViewModel: AppViewModel, onBack: () -> Unit) {
         Box(Modifier.size(16.dp))
         Text(stringResource(R.string.new_task_assignee_label), style = MaterialTheme.typography.labelLarge)
         Box(Modifier.size(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            FamilyMembers.forEach { member ->
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            members.forEach { member ->
                 AssigneeAvatar(
-                    label = stringResource(member.nameRes),
-                    avatarRes = member.avatarRes,
+                    label = member.name,
                     selected = member.id == selectedAssignee,
                     onClick = { selectedAssignee = member.id },
                 )
@@ -394,16 +405,13 @@ private fun LabeledClickableField(
 }
 
 @Composable
-private fun AssigneeAvatar(label: String, avatarRes: Int, selected: Boolean, onClick: () -> Unit) {
+private fun AssigneeAvatar(label: String, selected: Boolean, onClick: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable(onClick = onClick)) {
-        Image(
-            painter = painterResource(avatarRes),
-            contentDescription = label,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(56.dp)
-                .clip(CircleShape)
-                .border(3.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest, CircleShape),
+        MemberAvatar(
+            name = label,
+            size = 56.dp,
+            borderColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest,
+            borderWidth = 3.dp,
         )
         Text(label, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 8.dp))
     }

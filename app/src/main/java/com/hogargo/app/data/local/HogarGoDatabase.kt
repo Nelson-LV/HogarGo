@@ -22,8 +22,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         BillEntity::class,
         TaskEntity::class,
         EventEntity::class,
+        HouseholdEntity::class,
+        MemberEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -35,6 +37,8 @@ abstract class HogarGoDatabase : RoomDatabase() {
     abstract fun billDao(): BillDao
     abstract fun taskDao(): TaskDao
     abstract fun eventDao(): EventDao
+    abstract fun householdDao(): HouseholdDao
+    abstract fun memberDao(): MemberDao
 
     companion object {
         private val MIGRATION_4_5 = object : Migration(4, 5) {

@@ -8,11 +8,11 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface WardrobeItemDao {
-    @Query("SELECT * FROM wardrobe_items")
-    fun observeAll(): Flow<List<WardrobeItemEntity>>
+    @Query("SELECT * FROM wardrobe_items WHERE householdId = :householdId")
+    fun observeAll(householdId: String): Flow<List<WardrobeItemEntity>>
 
-    @Query("SELECT * FROM wardrobe_items WHERE id = :id")
-    suspend fun getOnce(id: String): WardrobeItemEntity?
+    @Query("SELECT * FROM wardrobe_items WHERE householdId = :householdId AND id = :id")
+    suspend fun getOnce(householdId: String, id: String): WardrobeItemEntity?
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertIfAbsent(items: List<WardrobeItemEntity>)

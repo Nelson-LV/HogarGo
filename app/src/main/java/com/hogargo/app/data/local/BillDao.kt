@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface BillDao {
-    @Query("SELECT * FROM bills ORDER BY dueDate ASC")
-    fun observeAll(): Flow<List<BillEntity>>
+    @Query("SELECT * FROM bills WHERE householdId = :householdId ORDER BY dueDate ASC")
+    fun observeAll(householdId: String): Flow<List<BillEntity>>
 
     @Insert
     suspend fun insert(bill: BillEntity)

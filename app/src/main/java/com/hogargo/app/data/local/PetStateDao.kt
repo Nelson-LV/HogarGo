@@ -8,11 +8,11 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PetStateDao {
-    @Query("SELECT * FROM pet_state WHERE id = 1")
-    fun observe(): Flow<PetStateEntity?>
+    @Query("SELECT * FROM pet_state WHERE householdId = :householdId")
+    fun observe(householdId: String): Flow<PetStateEntity?>
 
-    @Query("SELECT * FROM pet_state WHERE id = 1")
-    suspend fun getOnce(): PetStateEntity?
+    @Query("SELECT * FROM pet_state WHERE householdId = :householdId")
+    suspend fun getOnce(householdId: String): PetStateEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(state: PetStateEntity)

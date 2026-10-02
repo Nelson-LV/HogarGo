@@ -204,4 +204,79 @@
     <string name="about_student_jhonatan">Jhonatan Palacios</string>
     <string name="about_student_jhonatan_role">Tasks, Home and notifications</string>
     <string name="about_footer">Made with ❤️ for the Mobile Applications course.</string>
+
+    <!-- Welcome / auth -->
+    <string name="welcome_tagline">Harmony, chores and finances for your family</string>
+    <string name="welcome_bubble">Hi! Shall we start a new adventure at home?</string>
+    <string name="welcome_title">Welcome to your new family nest!</string>
+    <string name="welcome_subtitle">Choose how you want to start organizing shared chores, expenses and Zori\'s care.</string>
+    <string name="welcome_create_title">Create a Home</string>
+    <string name="welcome_create_desc">Found your family space and invite your loved ones with a special code.</string>
+    <string name="welcome_join_title">Join a Home</string>
+    <string name="welcome_join_desc">Already have a code from your family? Enter it and join their nest instantly.</string>
+    <string name="welcome_chip_tasks">Happy chores</string>
+    <string name="welcome_chip_finance">Clear accounts</string>
+    <string name="welcome_already_member">Already part of one?</string>
+    <string name="welcome_sign_in">Sign In</string>
+
+    <string name="login_title">Sign in</string>
+    <string name="login_description">Enter your name and your home\'s code to get back in.</string>
+    <string name="login_button">Sign in</string>
+
+    <string name="join_title">Join A Home</string>
+    <string name="join_badge">Home sweet home</string>
+    <string name="join_heading">Join your Home!</string>
+    <string name="join_description">Enter the 6-character code your family\'s admin shared with you to sync chores and expenses and take care of Zori together.</string>
+    <string name="join_name_label">Your Name</string>
+    <string name="join_name_hint">E.g. John, Mom, Sophie...</string>
+    <string name="join_code_label">Invitation code</string>
+    <string name="join_benefits_title">What can you do once you join?</string>
+    <string name="join_benefit_tasks_title">Shared daily missions</string>
+    <string name="join_benefit_tasks_desc">Clean together and earn home rewards</string>
+    <string name="join_benefit_finance_title">Family expenses in order</string>
+    <string name="join_benefit_finance_desc">Transparent accounts and savings jars</string>
+    <string name="join_benefit_pet_title">Care for and pamper Zori</string>
+    <string name="join_benefit_pet_desc">The sweet pet that grows when the home gets organized</string>
+    <string name="join_zori_quote">“I can\'t wait to give you a welcome paw!” — Zori</string>
+    <string name="join_button">Join the Home</string>
+    <string name="join_no_home">Don\'t have a home yet?</string>
+    <string name="join_create_link">Create a new home</string>
+
+    <string name="create_title">Create A Home</string>
+    <string name="create_heading">Create your New Home!</string>
+    <string name="create_description">Create a shared space for your family and start caring for Zori together.</string>
+    <string name="create_name_label">Your Name or Nickname</string>
+    <string name="create_name_hint">E.g. Carlos Gómez</string>
+    <string name="create_household_label">Home Name</string>
+    <string name="create_household_hint">E.g. Happy Villa</string>
+    <string name="create_code_chip">Unique Family Code</string>
+    <string name="create_code_copy">Copy</string>
+    <string name="create_code_copied">Code copied</string>
+    <string name="create_code_refresh_cd">Generate another code</string>
+    <string name="create_code_help">Share this code with your family members so they can join from their devices.</string>
+    <string name="create_companion_title">Home Companion</string>
+    <string name="create_companion_desc">Zori will be waiting to welcome you to your new nest.</string>
+    <string name="create_button">Create Home and Start</string>
+    <string name="create_have_code">Already have a code?</string>
+    <string name="create_join_link">Join an existing home</string>
+
+    <string name="auth_error_name_empty">Enter your name</string>
+    <string name="auth_error_household_empty">Give your home a name</string>
+    <string name="auth_error_code_invalid">The code must have 6 characters</string>
+    <string name="auth_error_code_not_found">We couldn\'t find a home with that code</string>
+    <string name="auth_error_name_taken">Someone in this home already has that name. If it\'s you, use Sign In.</string>
+    <string name="auth_error_member_not_found">We couldn\'t find that member in this home</string>
+    <string name="auth_error_code_taken">That code was already in use. We generated a new one, please try again.</string>
+
+    <!-- Profile -->
+    <string name="profile_cd">Profile</string>
+    <string name="profile_title">My profile</string>
+    <string name="profile_household">Home</string>
+    <string name="profile_code">Invitation code</string>
+    <string name="profile_members">Members (%1$d)</string>
+    <string name="profile_admin">Admin</string>
+    <string name="profile_you">you</string>
+    <string name="profile_sign_out">Sign out</string>
+    <string name="profile_copy_code">Copy code</string>
+    <string name="home_greeting_named">Good morning, %1$s!</string>
 </resources>

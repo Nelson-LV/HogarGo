@@ -9,11 +9,11 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SavingsGoalDao {
-    @Query("SELECT * FROM savings_goal ORDER BY id ASC")
-    fun observeAll(): Flow<List<SavingsGoalEntity>>
+    @Query("SELECT * FROM savings_goal WHERE householdId = :householdId ORDER BY id ASC")
+    fun observeAll(householdId: String): Flow<List<SavingsGoalEntity>>
 
-    @Query("SELECT * FROM savings_goal WHERE id = :id")
-    suspend fun getById(id: Long): SavingsGoalEntity?
+    @Query("SELECT * FROM savings_goal WHERE householdId = :householdId AND id = :id")
+    suspend fun getById(householdId: String, id: Long): SavingsGoalEntity?
 
     @Delete
     suspend fun delete(goal: SavingsGoalEntity)

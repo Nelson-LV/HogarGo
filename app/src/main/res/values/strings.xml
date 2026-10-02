@@ -204,4 +204,79 @@
     <string name="about_student_jhonatan">Jhonatan Palacios</string>
     <string name="about_student_jhonatan_role">Tareas, Inicio y notificaciones</string>
     <string name="about_footer">Hecho con ❤️ para el curso de Aplicaciones Móviles.</string>
+
+    <!-- Welcome / auth -->
+    <string name="welcome_tagline">Armonía, tareas y finanzas para tu familia</string>
+    <string name="welcome_bubble">¡Hola! ¿Comenzamos una nueva aventura en casa?</string>
+    <string name="welcome_title">¡Te damos la bienvenida a tu nuevo nido familiar!</string>
+    <string name="welcome_subtitle">Elige cómo deseas empezar a organizar las tareas compartidas, gastos y el cuidado de Zori.</string>
+    <string name="welcome_create_title">Crear un Hogar</string>
+    <string name="welcome_create_desc">Funda tu espacio familiar e invita a tus seres queridos con un código especial.</string>
+    <string name="welcome_join_title">Unirse a un Hogar</string>
+    <string name="welcome_join_desc">¿Ya tienes un código de tu familia? Introdúcelo y únete al instante a su nido.</string>
+    <string name="welcome_chip_tasks">Tareas felices</string>
+    <string name="welcome_chip_finance">Cuentas claras</string>
+    <string name="welcome_already_member">¿Ya formas parte de uno?</string>
+    <string name="welcome_sign_in">Iniciar Sesión</string>
+
+    <string name="login_title">Iniciar sesión</string>
+    <string name="login_description">Escribe tu nombre y el código de tu hogar para volver a entrar.</string>
+    <string name="login_button">Entrar</string>
+
+    <string name="join_title">Unirse A Un Hogar</string>
+    <string name="join_badge">Hogar dulce hogar</string>
+    <string name="join_heading">¡Únete a tu Hogar!</string>
+    <string name="join_description">Introduce el código de 6 caracteres que te compartió el administrador de tu familia para sincronizar tareas, gastos y cuidar a Zori juntos.</string>
+    <string name="join_name_label">Tu Nombre</string>
+    <string name="join_name_hint">Ej. Juan, Mamá, Sofía...</string>
+    <string name="join_code_label">Código de invitación</string>
+    <string name="join_benefits_title">¿Qué podrás hacer al unirte?</string>
+    <string name="join_benefit_tasks_title">Misiones diarias compartidas</string>
+    <string name="join_benefit_tasks_desc">Limpien juntos y ganen recompensas caseras</string>
+    <string name="join_benefit_finance_title">Gastos familiares en orden</string>
+    <string name="join_benefit_finance_desc">Cuentas transparentes y botes de ahorro</string>
+    <string name="join_benefit_pet_title">Cuidar y mimar a Zori</string>
+    <string name="join_benefit_pet_desc">La tierna mascota que crece cuando el hogar se organiza</string>
+    <string name="join_zori_quote">“¡Tengo muchas ganas de darte la patita de bienvenida!” — Zori</string>
+    <string name="join_button">Unirme al Hogar</string>
+    <string name="join_no_home">¿Aún no tienes un hogar?</string>
+    <string name="join_create_link">Crear un nuevo hogar</string>
+
+    <string name="create_title">Crear Un Hogar</string>
+    <string name="create_heading">¡Crea tu Nuevo Hogar!</string>
+    <string name="create_description">Crea un espacio compartido para tu familia y comiencen a cuidar a Zori juntos.</string>
+    <string name="create_name_label">Tu Nombre o Apodo</string>
+    <string name="create_name_hint">Ej. Carlos Gómez</string>
+    <string name="create_household_label">Nombre del Hogar</string>
+    <string name="create_household_hint">Ej. Villa Alegría</string>
+    <string name="create_code_chip">Código Único de Familia</string>
+    <string name="create_code_copy">Copiar</string>
+    <string name="create_code_copied">Código copiado</string>
+    <string name="create_code_refresh_cd">Generar otro código</string>
+    <string name="create_code_help">Comparte este código con los miembros de tu familia para que puedan unirse desde sus dispositivos.</string>
+    <string name="create_companion_title">Compañero de Hogar</string>
+    <string name="create_companion_desc">Zori estará esperando para darles la bienvenida a su nuevo nido.</string>
+    <string name="create_button">Crear Hogar y Empezar</string>
+    <string name="create_have_code">¿Ya tienes un código?</string>
+    <string name="create_join_link">Unirse a un hogar existente</string>
+
+    <string name="auth_error_name_empty">Escribe tu nombre</string>
+    <string name="auth_error_household_empty">Ponle un nombre a tu hogar</string>
+    <string name="auth_error_code_invalid">El código debe tener 6 caracteres</string>
+    <string name="auth_error_code_not_found">No encontramos ningún hogar con ese código</string>
+    <string name="auth_error_name_taken">Ya hay alguien con ese nombre en este hogar. Si eres tú, usa Iniciar Sesión.</string>
+    <string name="auth_error_member_not_found">No encontramos a ese integrante en este hogar</string>
+    <string name="auth_error_code_taken">Ese código ya estaba en uso. Generamos uno nuevo, inténtalo otra vez.</string>
+
+    <!-- Profile -->
+    <string name="profile_cd">Perfil</string>
+    <string name="profile_title">Mi perfil</string>
+    <string name="profile_household">Hogar</string>
+    <string name="profile_code">Código de invitación</string>
+    <string name="profile_members">Integrantes (%1$d)</string>
+    <string name="profile_admin">Admin</string>
+    <string name="profile_you">tú</string>
+    <string name="profile_sign_out">Cerrar sesión</string>
+    <string name="profile_copy_code">Copiar código</string>
+    <string name="home_greeting_named">¡Buenos días, %1$s!</string>
 </resources>
