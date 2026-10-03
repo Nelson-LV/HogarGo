@@ -2,6 +2,10 @@ package com.hogargo.app.ui.household
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import kotlinx.coroutines.delay
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -65,15 +69,31 @@ fun RecoverCodesDialog(
     var loading by remember { mutableStateOf(false) }
     var enterError by remember { mutableStateOf<AuthError?>(null) }
     val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
+    val scrollState = rememberScrollState()
     val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
     val copiedMessage = stringResource(R.string.create_code_copied)
 
+    // Bring the results into view once they are drawn (the keyboard used to hide them).
+    LaunchedEffect(results, enterError) {
+        if (results != null) {
+            delay(150)
+            scrollState.animateScrollTo(scrollState.maxValue)
+        }
+    }
+
     fun search() {
-        if (loading) return
+        if (loading || user.isBlank()) return
+        focusManager.clearFocus()
         loading = true
+        enterError = null
         scope.launch {
-            results = onRecover(user)
+            results = try {
+                onRecover(user)
+            } catch (e: Exception) {
+                emptyList()
+            }
             loading = false
         }
     }
@@ -98,7 +118,7 @@ fun RecoverCodesDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.recover_title), style = MaterialTheme.typography.titleLarge) },
         text = {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            Column(modifier = Modifier.verticalScroll(scrollState)) {
                 Text(
                     text = stringResource(R.string.recover_description),
                     style = MaterialTheme.typography.bodyMedium,
@@ -114,6 +134,11 @@ fun RecoverCodesDialog(
                     onImeAction = ::search,
                     capitalization = KeyboardCapitalization.None,
                 )
+
+                if (loading) {
+                    Spacer(Modifier.height(12.dp))
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                }
 
                 results?.let { found ->
                     Spacer(Modifier.height(12.dp))

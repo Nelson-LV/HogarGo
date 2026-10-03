@@ -279,4 +279,44 @@
     <string name="profile_sign_out">Sign out</string>
     <string name="profile_copy_code">Copy code</string>
     <string name="home_greeting_named">Good morning, %1$s!</string>
+
+    <!-- Admin approval, recovery user, leaving, admin tools -->
+    <string name="login_name_label">Your name or username</string>
+    <string name="login_name_hint">Name in the home or recovery username</string>
+    <string name="auth_error_pending_approval">Your request hasn\'t been accepted yet. Ask the admin to approve you.</string>
+    <string name="join_pending_title">Request sent!</string>
+    <string name="join_pending_desc">The home admin must accept you before you can get in. Once they do, use Sign In with your name and the code.</string>
+    <string name="recovery_label">Recovery username</string>
+    <string name="recovery_hint">E.g. perez_family24</string>
+    <string name="recovery_help">It\'s different from your name. With it you can see the code of your homes if you forget it. Keep it safe and don\'t share it.</string>
+    <string name="recovery_saved">Username saved</string>
+    <string name="auth_error_recovery_invalid">Must be at least 4 characters</string>
+    <string name="auth_error_recovery_same">Must be different from your name</string>
+    <string name="login_forgot_code">Forgot the code?</string>
+    <string name="recover_title">Recover code</string>
+    <string name="recover_description">Enter your recovery username to see the codes of the homes you\'re still a member of.</string>
+    <string name="recover_button">Show codes</string>
+    <string name="recover_registered_as">You registered as: %1$s</string>
+    <string name="recover_enter">Enter</string>
+    <string name="recover_close">Close</string>
+    <string name="recover_none">We couldn\'t find any homes with that username. Check that it\'s spelled correctly.</string>
+    <string name="profile_recovery_set">Set · tap to change it</string>
+    <string name="profile_recovery_missing">Not set · tap to create it</string>
+    <string name="profile_leave">Leave home</string>
+    <string name="leave_title">Leave %1$s?</string>
+    <string name="leave_message_member">You will stop being a member and this home\'s code will no longer show up in your recovery. To come back you\'ll have to request to join again and the admin will have to accept you.</string>
+    <string name="leave_message_admin">You\'re the admin: when you leave, the role passes to the longest-standing member. To come back you\'ll have to request to join again.</string>
+    <string name="leave_message_admin_alone">You\'re the only person in this home. If you leave, the home and all its data (tasks, expenses, calendar and Zori) will be deleted forever.</string>
+    <string name="leave_confirm">Leave</string>
+    <string name="admin_edit_home">Rename home</string>
+    <string name="admin_home_name_label">Home name</string>
+    <string name="admin_save">Save</string>
+    <string name="admin_cancel">Cancel</string>
+    <string name="admin_pending_title">Pending requests (%1$d)</string>
+    <string name="admin_accept">Accept</string>
+    <string name="admin_reject">Reject</string>
+    <string name="admin_remove_member_cd">Remove from home</string>
+    <string name="admin_remove_title">Remove %1$s?</string>
+    <string name="admin_remove_message">They will leave the home and their tasks will become unassigned. They can request to join again with the code.</string>
+    <string name="admin_remove_confirm">Remove</string>
 </resources>
