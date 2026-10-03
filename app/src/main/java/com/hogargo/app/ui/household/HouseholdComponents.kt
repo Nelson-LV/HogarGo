@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.hogargo.app.R
 import com.hogargo.app.data.household.AuthError
+import com.hogargo.app.data.household.RecoveryUser
 import com.hogargo.app.data.household.HouseholdCode
 import com.hogargo.app.ui.theme.BrandBrownStrong
 import com.hogargo.app.ui.theme.BrandOrangeContainer
@@ -70,6 +71,20 @@ fun AuthError.messageRes(): Int = when (this) {
 /** Which field an [AuthError] should be shown under. */
 fun AuthError.isCodeError(): Boolean =
     this == AuthError.INVALID_CODE || this == AuthError.CODE_NOT_FOUND || this == AuthError.CODE_TAKEN
+
+/**
+ * Instant validation of the recovery user while it is being typed. Null = nothing to complain
+ * about (including "still empty", which just keeps the button disabled).
+ */
+fun liveRecoveryError(name: String, user: String): AuthError? {
+    val normalized = RecoveryUser.normalize(user)
+    return when {
+        normalized.isEmpty() -> null
+        normalized.length < RecoveryUser.MIN_LENGTH -> AuthError.RECOVERY_USER_INVALID
+        normalized == name.trim().lowercase() -> AuthError.RECOVERY_USER_SAME_AS_NAME
+        else -> null
+    }
+}
 
 fun AuthError.isRecoveryError(): Boolean =
     this == AuthError.RECOVERY_USER_INVALID || this == AuthError.RECOVERY_USER_SAME_AS_NAME
@@ -232,13 +247,20 @@ fun BigActionButton(
     containerColor: Color,
     modifier: Modifier = Modifier,
     loading: Boolean = false,
+    enabled: Boolean = true,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(if (loading) containerColor.copy(alpha = 0.7f) else containerColor)
-            .clickable(enabled = !loading, onClick = onClick)
+            .background(
+                when {
+                    !enabled -> containerColor.copy(alpha = 0.4f)
+                    loading -> containerColor.copy(alpha = 0.7f)
+                    else -> containerColor
+                },
+            )
+            .clickable(enabled = !loading && enabled, onClick = onClick)
             .padding(horizontal = 24.dp, vertical = 18.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,

@@ -94,8 +94,11 @@ fun CreateHouseholdScreen(
         if (code.isEmpty()) code = generateCode()
     }
 
+    val recoveryLiveError = liveRecoveryError(userName, recoveryUser)
+    val canSubmit = recoveryUser.isNotBlank() && recoveryLiveError == null
+
     fun submit() {
-        if (loading || code.isEmpty()) return
+        if (loading || code.isEmpty() || !canSubmit) return
         focusManager.clearFocus()
         loading = true
         scope.launch {
@@ -174,7 +177,7 @@ fun CreateHouseholdScreen(
                 value = recoveryUser,
                 onValueChange = { recoveryUser = it; error = null },
                 placeholder = stringResource(R.string.recovery_hint),
-                errorText = error?.takeIf { it.isRecoveryError() }?.let { stringResource(it.messageRes()) },
+                errorText = (recoveryLiveError ?: error?.takeIf { it.isRecoveryError() })?.let { stringResource(it.messageRes()) },
                 imeAction = ImeAction.Done,
                 onImeAction = { focusManager.clearFocus() },
                 capitalization = KeyboardCapitalization.None,
@@ -341,6 +344,7 @@ fun CreateHouseholdScreen(
             onClick = ::submit,
             containerColor = BrandBrownStrong,
             loading = loading,
+            enabled = canSubmit,
         )
 
         Spacer(Modifier.height(8.dp))

@@ -76,8 +76,11 @@ fun JoinHouseholdScreen(
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
 
+    val recoveryLiveError = liveRecoveryError(name, recoveryUser)
+    val canSubmit = recoveryUser.isNotBlank() && recoveryLiveError == null
+
     fun submit() {
-        if (loading) return
+        if (loading || !canSubmit) return
         focusManager.clearFocus()
         loading = true
         scope.launch {
@@ -192,7 +195,7 @@ fun JoinHouseholdScreen(
                 value = recoveryUser,
                 onValueChange = { recoveryUser = it; error = null; requestSent = false },
                 placeholder = stringResource(R.string.recovery_hint),
-                errorText = error?.takeIf { it.isRecoveryError() }?.let { stringResource(it.messageRes()) },
+                errorText = (recoveryLiveError ?: error?.takeIf { it.isRecoveryError() })?.let { stringResource(it.messageRes()) },
                 imeAction = ImeAction.Next,
                 onImeAction = { focusManager.moveFocus(FocusDirection.Down) },
                 capitalization = KeyboardCapitalization.None,
@@ -273,6 +276,7 @@ fun JoinHouseholdScreen(
             onClick = ::submit,
             containerColor = BrandOrangeDeep,
             loading = loading,
+            enabled = canSubmit,
         )
 
         Spacer(Modifier.height(8.dp))

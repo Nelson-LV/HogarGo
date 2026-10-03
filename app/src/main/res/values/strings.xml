@@ -339,4 +339,5 @@
     <string name="auth_error_recovery_current_wrong">El usuario actual no coincide</string>
     <string name="auth_error_recovery_mismatch">Los dos usuarios no coinciden</string>
     <string name="auth_error_recovery_same_as_current">Debe ser distinto del usuario actual</string>
+    <string name="profile_name_taken">Ya hay alguien con ese nombre en este hogar</string>
 </resources>

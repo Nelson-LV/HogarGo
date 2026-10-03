@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.runtime.rememberCoroutineScope
 import com.hogargo.app.data.household.AuthError
+import com.hogargo.app.data.household.RecoveryUser
 import kotlinx.coroutines.launch
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -347,6 +348,8 @@ fun ProfileDialog(
     if (showRecoveryUser) {
         RecoveryUserDialog(
             hasCurrent = me.recoveryKey.isNotEmpty(),
+            currentKey = me.recoveryKey,
+            memberName = me.name,
             onDismiss = { showRecoveryUser = false },
             onSave = onChangeRecoveryUser,
         )
@@ -355,6 +358,8 @@ fun ProfileDialog(
     if (showRenameMe) {
         RenameMemberDialog(
             currentName = me.name,
+            recoveryKey = me.recoveryKey,
+            takenNames = (members + pendingMembers).filter { it.id != me.id }.map { it.name.lowercase() }.toSet(),
             onDismiss = { showRenameMe = false },
             onSave = onRenameMember,
         )
@@ -425,6 +430,8 @@ private fun RenameHouseholdDialog(
 @Composable
 private fun RenameMemberDialog(
     currentName: String,
+    recoveryKey: String,
+    takenNames: Set<String>,
     onDismiss: () -> Unit,
     onSave: suspend (String) -> AuthError?,
 ) {
@@ -435,8 +442,18 @@ private fun RenameMemberDialog(
     val context = LocalContext.current
     val savedMessage = stringResource(R.string.profile_name_saved)
 
+    // Instant validation: the error shows while typing and the button stays disabled.
+    val trimmed = name.trim()
+    val liveError: AuthError? = when {
+        trimmed.isEmpty() -> null
+        recoveryKey.isNotEmpty() && RecoveryUser.hash(trimmed) == recoveryKey -> AuthError.NAME_SAME_AS_RECOVERY_USER
+        trimmed.lowercase() in takenNames -> AuthError.NAME_TAKEN
+        else -> null
+    }
+    val ready = trimmed.isNotEmpty() && liveError == null && trimmed != currentName
+
     fun save() {
-        if (loading) return
+        if (loading || !ready) return
         loading = true
         scope.launch {
             val result = onSave(name)
@@ -465,7 +482,9 @@ private fun RenameMemberDialog(
                     value = name,
                     onValueChange = { name = it; error = null },
                     placeholder = stringResource(R.string.profile_name_new_hint),
-                    errorText = error?.let { stringResource(it.messageRes()) },
+                    errorText = (liveError ?: error)?.let {
+                        stringResource(if (it == AuthError.NAME_TAKEN) R.string.profile_name_taken else it.messageRes())
+                    },
                     imeAction = androidx.compose.ui.text.input.ImeAction.Done,
                     onImeAction = ::save,
                 )
@@ -478,7 +497,7 @@ private fun RenameMemberDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = ::save, enabled = !loading && name.isNotBlank()) {
+            TextButton(onClick = ::save, enabled = !loading && ready) {
                 Text(stringResource(R.string.admin_save))
             }
         },
@@ -491,6 +510,8 @@ private fun RenameMemberDialog(
 @Composable
 private fun RecoveryUserDialog(
     hasCurrent: Boolean,
+    currentKey: String,
+    memberName: String,
     onDismiss: () -> Unit,
     onSave: suspend (current: String, new: String, confirm: String) -> AuthError?,
 ) {
@@ -504,8 +525,25 @@ private fun RecoveryUserDialog(
     val savedMessage = stringResource(R.string.recovery_saved)
     val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
 
+    // Instant validation: errors show while typing and the button stays disabled until all is valid.
+    val currentError: AuthError? =
+        if (hasCurrent && current.isNotBlank() && RecoveryUser.hash(current) != currentKey) AuthError.RECOVERY_CURRENT_WRONG else null
+    val newNormalized = RecoveryUser.normalize(newUser)
+    val newError: AuthError? = when {
+        newNormalized.isEmpty() -> null
+        newNormalized.length < RecoveryUser.MIN_LENGTH -> AuthError.RECOVERY_USER_INVALID
+        newNormalized == memberName.trim().lowercase() -> AuthError.RECOVERY_USER_SAME_AS_NAME
+        hasCurrent && RecoveryUser.hash(newUser) == currentKey -> AuthError.RECOVERY_SAME_AS_CURRENT
+        else -> null
+    }
+    val confirmError: AuthError? =
+        if (confirm.isNotBlank() && RecoveryUser.normalize(confirm) != newNormalized) AuthError.RECOVERY_MISMATCH else null
+    val ready = newUser.isNotBlank() && confirm.isNotBlank() &&
+        (!hasCurrent || current.isNotBlank()) &&
+        currentError == null && newError == null && confirmError == null
+
     fun save() {
-        if (loading) return
+        if (loading || !ready) return
         loading = true
         scope.launch {
             val result = onSave(current, newUser, confirm)
@@ -518,8 +556,6 @@ private fun RecoveryUserDialog(
             }
         }
     }
-
-    val ready = newUser.isNotBlank() && confirm.isNotBlank() && (!hasCurrent || current.isNotBlank())
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -542,7 +578,8 @@ private fun RecoveryUserDialog(
                         value = current,
                         onValueChange = { current = it; error = null },
                         placeholder = stringResource(R.string.recovery_hint),
-                        errorText = error?.takeIf { it == AuthError.RECOVERY_CURRENT_WRONG }?.let { stringResource(it.messageRes()) },
+                        errorText = (currentError ?: error?.takeIf { it == AuthError.RECOVERY_CURRENT_WRONG })
+                            ?.let { stringResource(it.messageRes()) },
                         imeAction = androidx.compose.ui.text.input.ImeAction.Next,
                         onImeAction = { focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Down) },
                         capitalization = KeyboardCapitalization.None,
@@ -558,10 +595,10 @@ private fun RecoveryUserDialog(
                     value = newUser,
                     onValueChange = { newUser = it; error = null },
                     placeholder = stringResource(R.string.recovery_hint),
-                    errorText = error?.takeIf {
+                    errorText = (newError ?: error?.takeIf {
                         it == AuthError.RECOVERY_USER_INVALID || it == AuthError.RECOVERY_USER_SAME_AS_NAME ||
                             it == AuthError.RECOVERY_SAME_AS_CURRENT
-                    }?.let { stringResource(it.messageRes()) },
+                    })?.let { stringResource(it.messageRes()) },
                     imeAction = androidx.compose.ui.text.input.ImeAction.Next,
                     onImeAction = { focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Down) },
                     capitalization = KeyboardCapitalization.None,
@@ -576,7 +613,8 @@ private fun RecoveryUserDialog(
                     value = confirm,
                     onValueChange = { confirm = it; error = null },
                     placeholder = stringResource(R.string.recovery_hint),
-                    errorText = error?.takeIf { it == AuthError.RECOVERY_MISMATCH }?.let { stringResource(it.messageRes()) },
+                    errorText = (confirmError ?: error?.takeIf { it == AuthError.RECOVERY_MISMATCH })
+                        ?.let { stringResource(it.messageRes()) },
                     imeAction = androidx.compose.ui.text.input.ImeAction.Done,
                     onImeAction = ::save,
                     capitalization = KeyboardCapitalization.None,

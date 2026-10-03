@@ -334,4 +334,5 @@
     <string name="auth_error_recovery_current_wrong">The current username doesn\'t match</string>
     <string name="auth_error_recovery_mismatch">The two usernames don\'t match</string>
     <string name="auth_error_recovery_same_as_current">Must be different from the current username</string>
+    <string name="profile_name_taken">Someone in this home already has that name</string>
 </resources>
