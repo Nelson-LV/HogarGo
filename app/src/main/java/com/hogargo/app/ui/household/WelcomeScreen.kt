@@ -73,6 +73,11 @@ fun WelcomeScreen(
         RecoverCodesDialog(
             onDismiss = { showRecover = false },
             onRecover = onRecoverCodes,
+            onSignIn = onSignIn,
+            onSignedIn = {
+                showRecover = false
+                onSignedIn()
+            },
         )
     }
 
@@ -335,11 +340,11 @@ private fun SignInDialog(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.height(16.dp))
-                FieldLabel(stringResource(R.string.join_name_label), Icons.Filled.Person)
+                FieldLabel(stringResource(R.string.login_name_label), Icons.Filled.Person)
                 HogarTextField(
                     value = name,
                     onValueChange = { name = it; error = null },
-                    placeholder = stringResource(R.string.join_name_hint),
+                    placeholder = stringResource(R.string.login_name_hint),
                     errorText = error?.takeIf { !it.isCodeError() }?.let { stringResource(it.messageRes()) },
                 )
                 Spacer(Modifier.height(8.dp))

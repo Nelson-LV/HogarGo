@@ -219,8 +219,10 @@
     <string name="welcome_already_member">¿Ya formas parte de uno?</string>
     <string name="welcome_sign_in">Iniciar Sesión</string>
 
+    <string name="login_name_label">Tu nombre o usuario</string>
+    <string name="login_name_hint">Nombre en el hogar o usuario de recuperación</string>
     <string name="login_title">Iniciar sesión</string>
-    <string name="login_description">Escribe tu nombre y el código de tu hogar para volver a entrar.</string>
+    <string name="login_description">Escribe tu nombre (o tu usuario de recuperación) y el código de tu hogar para volver a entrar.</string>
     <string name="login_button">Entrar</string>
 
     <string name="join_title">Unirse A Un Hogar</string>
@@ -293,6 +295,8 @@
     <string name="recover_title">Recuperar código</string>
     <string name="recover_description">Escribe tu usuario de recuperación para ver los códigos de los hogares en los que sigues siendo integrante.</string>
     <string name="recover_button">Ver códigos</string>
+    <string name="recover_registered_as">Te registraste como: %1$s</string>
+    <string name="recover_enter">Entrar</string>
     <string name="recover_close">Cerrar</string>
     <string name="recover_none">No encontramos hogares con ese usuario. Revisa que esté bien escrito.</string>
     <string name="profile_recovery_set">Configurado · toca para cambiarlo</string>

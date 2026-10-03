@@ -31,7 +31,13 @@ sealed interface AuthResult {
 }
 
 /** A household the recovery user still belongs to, with its invitation code. */
-data class RecoveredHousehold(val householdName: String, val code: String, val isAdmin: Boolean)
+data class RecoveredHousehold(
+    val householdName: String,
+    val code: String,
+    val isAdmin: Boolean,
+    /** The name this person registered with in that household. */
+    val memberName: String,
+)
 
 class HouseholdRepository(
     private val database: HogarGoDatabase,
@@ -101,7 +107,9 @@ class HouseholdRepository(
         if (code.length != HouseholdCode.LENGTH) return AuthResult.Failure(AuthError.INVALID_CODE)
 
         val household = householdDao.findByCode(code) ?: return AuthResult.Failure(AuthError.CODE_NOT_FOUND)
+        // The first field accepts either the name used in the house or the recovery user.
         val member = memberDao.findByName(household.id, name.lowercase())
+            ?: memberDao.findByRecoveryKey(household.id, RecoveryUser.hash(name))
             ?: return AuthResult.Failure(AuthError.MEMBER_NOT_FOUND)
         if (!member.isApproved) return AuthResult.Failure(AuthError.PENDING_APPROVAL)
         return AuthResult.Success(open(member, household))
@@ -148,7 +156,7 @@ class HouseholdRepository(
         if (RecoveryUser.normalize(rawUser).isEmpty()) return emptyList()
         return memberDao.findApprovedByRecoveryKey(RecoveryUser.hash(rawUser)).mapNotNull { member ->
             householdDao.findById(member.householdId)?.let {
-                RecoveredHousehold(it.name, it.code, member.isAdmin)
+                RecoveredHousehold(it.name, it.code, member.isAdmin, member.name)
             }
         }
     }

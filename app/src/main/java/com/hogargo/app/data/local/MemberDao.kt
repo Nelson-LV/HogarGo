@@ -29,6 +29,9 @@ interface MemberDao {
     @Query("SELECT * FROM members WHERE recoveryKey = :recoveryKey AND isApproved = 1")
     suspend fun findApprovedByRecoveryKey(recoveryKey: String): List<MemberEntity>
 
+    @Query("SELECT * FROM members WHERE householdId = :householdId AND recoveryKey = :recoveryKey LIMIT 1")
+    suspend fun findByRecoveryKey(householdId: String, recoveryKey: String): MemberEntity?
+
     @Query("UPDATE members SET recoveryKey = :recoveryKey WHERE id = :id")
     suspend fun setRecoveryKey(id: String, recoveryKey: String)
 
