@@ -44,8 +44,11 @@ class SessionViewModel(private val repository: HouseholdRepository) : ViewModel(
     suspend fun recoverCodes(recoveryUser: String): List<RecoveredHousehold> =
         repository.recoverCodes(recoveryUser)
 
-    suspend fun setRecoveryUser(memberId: String, recoveryUser: String): AuthError? =
-        repository.setRecoveryUser(memberId, recoveryUser)
+    suspend fun renameMember(memberId: String, newName: String): AuthError? =
+        repository.renameMember(memberId, newName)
+
+    suspend fun changeRecoveryUser(memberId: String, current: String, new: String, confirm: String): AuthError? =
+        repository.changeRecoveryUser(memberId, current, new, confirm)
 
     /** The signed-in person leaves their household for good (see HouseholdRepository.leaveHousehold). */
     fun leaveHousehold() {

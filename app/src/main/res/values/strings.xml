@@ -324,4 +324,19 @@
     <string name="admin_remove_confirm">Eliminar</string>
 
     <string name="home_greeting_named">¡Buenos días, %1$s!</string>
+
+    <!-- Edit own name / change recovery user -->
+    <string name="profile_edit_name">Cambiar mi nombre</string>
+    <string name="profile_name_current">Nombre actual: %1$s</string>
+    <string name="profile_name_new_hint">Tu nuevo nombre</string>
+    <string name="profile_name_scope_note">Solo cambia en este hogar. En tus otros hogares conservas el nombre que tengas allí.</string>
+    <string name="profile_name_saved">Nombre actualizado</string>
+    <string name="auth_error_name_same_as_recovery">Debe ser distinto de tu usuario de recuperación</string>
+    <string name="recovery_change_help">Por seguridad escribe tu usuario actual y luego el nuevo dos veces.</string>
+    <string name="recovery_current_label">Usuario actual</string>
+    <string name="recovery_new_label">Usuario nuevo</string>
+    <string name="recovery_confirm_label">Repite el usuario nuevo</string>
+    <string name="auth_error_recovery_current_wrong">El usuario actual no coincide</string>
+    <string name="auth_error_recovery_mismatch">Los dos usuarios no coinciden</string>
+    <string name="auth_error_recovery_same_as_current">Debe ser distinto del usuario actual</string>
 </resources>

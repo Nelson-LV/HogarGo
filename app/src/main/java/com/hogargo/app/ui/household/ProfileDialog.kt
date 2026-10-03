@@ -69,12 +69,14 @@ fun ProfileDialog(
     onApproveMember: (MemberEntity) -> Unit,
     onRejectMember: (MemberEntity) -> Unit,
     onLeaveHousehold: () -> Unit,
-    onSetRecoveryUser: suspend (String) -> AuthError?,
+    onRenameMember: suspend (String) -> AuthError?,
+    onChangeRecoveryUser: suspend (current: String, new: String, confirm: String) -> AuthError?,
 ) {
     // The session snapshot can be stale (e.g. admin role handed over), so read the live row.
     val me = members.firstOrNull { it.id == session.member.id } ?: session.member
     val isAdmin = me.isAdmin
     var showRecoveryUser by remember { mutableStateOf(false) }
+    var showRenameMe by remember { mutableStateOf(false) }
     var showLeave by remember { mutableStateOf(false) }
     var showRename by remember { mutableStateOf(false) }
     var memberToRemove by remember { mutableStateOf<MemberEntity?>(null) }
@@ -92,14 +94,27 @@ fun ProfileDialog(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                MemberAvatar(name = session.member.name, size = 72.dp)
-                Text(
-                    text = session.member.name,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center,
+                MemberAvatar(name = me.name, size = 72.dp)
+                Row(
                     modifier = Modifier.padding(top = 10.dp),
-                )
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = me.name,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    IconButton(onClick = { showRenameMe = true }, modifier = Modifier.size(32.dp)) {
+                        Icon(
+                            Icons.Filled.Edit,
+                            contentDescription = stringResource(R.string.profile_edit_name),
+                            tint = BrandBrownStrong,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = stringResource(R.string.profile_household) + ": " + householdName,
@@ -331,8 +346,17 @@ fun ProfileDialog(
 
     if (showRecoveryUser) {
         RecoveryUserDialog(
+            hasCurrent = me.recoveryKey.isNotEmpty(),
             onDismiss = { showRecoveryUser = false },
-            onSave = onSetRecoveryUser,
+            onSave = onChangeRecoveryUser,
+        )
+    }
+
+    if (showRenameMe) {
+        RenameMemberDialog(
+            currentName = me.name,
+            onDismiss = { showRenameMe = false },
+            onSave = onRenameMember,
         )
     }
 
@@ -399,22 +423,23 @@ private fun RenameHouseholdDialog(
 }
 
 @Composable
-private fun RecoveryUserDialog(
+private fun RenameMemberDialog(
+    currentName: String,
     onDismiss: () -> Unit,
     onSave: suspend (String) -> AuthError?,
 ) {
-    var user by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<AuthError?>(null) }
     var loading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val savedMessage = stringResource(R.string.recovery_saved)
+    val savedMessage = stringResource(R.string.profile_name_saved)
 
     fun save() {
         if (loading) return
         loading = true
         scope.launch {
-            val result = onSave(user)
+            val result = onSave(name)
             loading = false
             if (result == null) {
                 Toast.makeText(context, savedMessage, Toast.LENGTH_SHORT).show()
@@ -427,20 +452,131 @@ private fun RecoveryUserDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.recovery_label)) },
+        title = { Text(stringResource(R.string.profile_edit_name)) },
         text = {
             Column {
                 Text(
-                    text = stringResource(R.string.recovery_help),
+                    text = stringResource(R.string.profile_name_current, currentName),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.height(12.dp))
                 HogarTextField(
-                    value = user,
-                    onValueChange = { user = it; error = null },
-                    placeholder = stringResource(R.string.recovery_hint),
+                    value = name,
+                    onValueChange = { name = it; error = null },
+                    placeholder = stringResource(R.string.profile_name_new_hint),
                     errorText = error?.let { stringResource(it.messageRes()) },
+                    imeAction = androidx.compose.ui.text.input.ImeAction.Done,
+                    onImeAction = ::save,
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.profile_name_scope_note),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = ::save, enabled = !loading && name.isNotBlank()) {
+                Text(stringResource(R.string.admin_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.admin_cancel)) }
+        },
+    )
+}
+
+@Composable
+private fun RecoveryUserDialog(
+    hasCurrent: Boolean,
+    onDismiss: () -> Unit,
+    onSave: suspend (current: String, new: String, confirm: String) -> AuthError?,
+) {
+    var current by remember { mutableStateOf("") }
+    var newUser by remember { mutableStateOf("") }
+    var confirm by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<AuthError?>(null) }
+    var loading by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val savedMessage = stringResource(R.string.recovery_saved)
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+
+    fun save() {
+        if (loading) return
+        loading = true
+        scope.launch {
+            val result = onSave(current, newUser, confirm)
+            loading = false
+            if (result == null) {
+                Toast.makeText(context, savedMessage, Toast.LENGTH_SHORT).show()
+                onDismiss()
+            } else {
+                error = result
+            }
+        }
+    }
+
+    val ready = newUser.isNotBlank() && confirm.isNotBlank() && (!hasCurrent || current.isNotBlank())
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.recovery_label)) },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Text(
+                    text = stringResource(if (hasCurrent) R.string.recovery_change_help else R.string.recovery_help),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(12.dp))
+                if (hasCurrent) {
+                    Text(
+                        text = stringResource(R.string.recovery_current_label),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    HogarTextField(
+                        value = current,
+                        onValueChange = { current = it; error = null },
+                        placeholder = stringResource(R.string.recovery_hint),
+                        errorText = error?.takeIf { it == AuthError.RECOVERY_CURRENT_WRONG }?.let { stringResource(it.messageRes()) },
+                        imeAction = androidx.compose.ui.text.input.ImeAction.Next,
+                        onImeAction = { focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Down) },
+                        capitalization = KeyboardCapitalization.None,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                }
+                Text(
+                    text = stringResource(R.string.recovery_new_label),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                HogarTextField(
+                    value = newUser,
+                    onValueChange = { newUser = it; error = null },
+                    placeholder = stringResource(R.string.recovery_hint),
+                    errorText = error?.takeIf {
+                        it == AuthError.RECOVERY_USER_INVALID || it == AuthError.RECOVERY_USER_SAME_AS_NAME ||
+                            it == AuthError.RECOVERY_SAME_AS_CURRENT
+                    }?.let { stringResource(it.messageRes()) },
+                    imeAction = androidx.compose.ui.text.input.ImeAction.Next,
+                    onImeAction = { focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Down) },
+                    capitalization = KeyboardCapitalization.None,
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.recovery_confirm_label),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                HogarTextField(
+                    value = confirm,
+                    onValueChange = { confirm = it; error = null },
+                    placeholder = stringResource(R.string.recovery_hint),
+                    errorText = error?.takeIf { it == AuthError.RECOVERY_MISMATCH }?.let { stringResource(it.messageRes()) },
                     imeAction = androidx.compose.ui.text.input.ImeAction.Done,
                     onImeAction = ::save,
                     capitalization = KeyboardCapitalization.None,
@@ -448,7 +584,7 @@ private fun RecoveryUserDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = ::save, enabled = !loading && user.isNotBlank()) {
+            TextButton(onClick = ::save, enabled = !loading && ready) {
                 Text(stringResource(R.string.admin_save))
             }
         },

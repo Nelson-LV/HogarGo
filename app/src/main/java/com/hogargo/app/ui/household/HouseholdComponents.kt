@@ -61,6 +61,10 @@ fun AuthError.messageRes(): Int = when (this) {
     AuthError.PENDING_APPROVAL -> R.string.auth_error_pending_approval
     AuthError.RECOVERY_USER_INVALID -> R.string.auth_error_recovery_invalid
     AuthError.RECOVERY_USER_SAME_AS_NAME -> R.string.auth_error_recovery_same
+    AuthError.NAME_SAME_AS_RECOVERY_USER -> R.string.auth_error_name_same_as_recovery
+    AuthError.RECOVERY_CURRENT_WRONG -> R.string.auth_error_recovery_current_wrong
+    AuthError.RECOVERY_MISMATCH -> R.string.auth_error_recovery_mismatch
+    AuthError.RECOVERY_SAME_AS_CURRENT -> R.string.auth_error_recovery_same_as_current
 }
 
 /** Which field an [AuthError] should be shown under. */

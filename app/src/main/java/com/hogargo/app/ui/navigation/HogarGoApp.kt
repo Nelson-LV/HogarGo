@@ -159,7 +159,10 @@ private fun HogarGoAppContent(sessionViewModel: SessionViewModel, startLoggedIn:
                     launchSingleTop = true
                 }
             },
-            onSetRecoveryUser = { user -> sessionViewModel.setRecoveryUser(session.member.id, user) },
+            onRenameMember = { name -> sessionViewModel.renameMember(session.member.id, name) },
+            onChangeRecoveryUser = { current, new, confirm ->
+                sessionViewModel.changeRecoveryUser(session.member.id, current, new, confirm)
+            },
             onDismiss = { showProfile = false },
             onSignOut = {
                 showProfile = false

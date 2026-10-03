@@ -308,8 +308,8 @@
     <string name="leave_message_admin">You\'re the admin: when you leave, the role passes to the longest-standing member. To come back you\'ll have to request to join again.</string>
     <string name="leave_message_admin_alone">You\'re the only person in this home. If you leave, the home and all its data (tasks, expenses, calendar and Zori) will be deleted forever.</string>
     <string name="leave_confirm">Leave</string>
-    <string name="admin_edit_home">Rename home</string>
-    <string name="admin_home_name_label">Home name</string>
+    <string name="admin_edit_household">Rename home</string>
+    <string name="admin_household_name_label">Home name</string>
     <string name="admin_save">Save</string>
     <string name="admin_cancel">Cancel</string>
     <string name="admin_pending_title">Pending requests (%1$d)</string>
@@ -319,4 +319,19 @@
     <string name="admin_remove_title">Remove %1$s?</string>
     <string name="admin_remove_message">They will leave the home and their tasks will become unassigned. They can request to join again with the code.</string>
     <string name="admin_remove_confirm">Remove</string>
+
+    <!-- Edit own name / change recovery user -->
+    <string name="profile_edit_name">Change my name</string>
+    <string name="profile_name_current">Current name: %1$s</string>
+    <string name="profile_name_new_hint">Your new name</string>
+    <string name="profile_name_scope_note">It only changes in this home. In your other homes you keep the name you have there.</string>
+    <string name="profile_name_saved">Name updated</string>
+    <string name="auth_error_name_same_as_recovery">Must be different from your recovery username</string>
+    <string name="recovery_change_help">For security, type your current username and then the new one twice.</string>
+    <string name="recovery_current_label">Current username</string>
+    <string name="recovery_new_label">New username</string>
+    <string name="recovery_confirm_label">Repeat the new username</string>
+    <string name="auth_error_recovery_current_wrong">The current username doesn\'t match</string>
+    <string name="auth_error_recovery_mismatch">The two usernames don\'t match</string>
+    <string name="auth_error_recovery_same_as_current">Must be different from the current username</string>
 </resources>

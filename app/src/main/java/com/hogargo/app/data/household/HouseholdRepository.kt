@@ -1,5 +1,6 @@
 package com.hogargo.app.data.household
 
+import android.database.sqlite.SQLiteConstraintException
 import androidx.room.withTransaction
 import com.hogargo.app.data.local.HogarGoDatabase
 import com.hogargo.app.data.local.HouseholdEntity
@@ -20,6 +21,10 @@ enum class AuthError {
     PENDING_APPROVAL,
     RECOVERY_USER_INVALID,
     RECOVERY_USER_SAME_AS_NAME,
+    NAME_SAME_AS_RECOVERY_USER,
+    RECOVERY_CURRENT_WRONG,
+    RECOVERY_MISMATCH,
+    RECOVERY_SAME_AS_CURRENT,
 }
 
 sealed interface AuthResult {
@@ -140,11 +145,42 @@ class HouseholdRepository(
         }
     }
 
-    /** Sets or changes the recovery user of an existing member. Returns the error, or null on success. */
-    suspend fun setRecoveryUser(memberId: String, rawUser: String): AuthError? {
+    /** Changes the name this person uses in their household. Returns the error, or null on success. */
+    suspend fun renameMember(memberId: String, newName: String): AuthError? {
+        val name = newName.trim()
+        if (name.isEmpty()) return AuthError.EMPTY_NAME
         val member = memberDao.findById(memberId) ?: return AuthError.MEMBER_NOT_FOUND
-        validateRecoveryUser(member.name, rawUser)?.let { return it }
-        memberDao.setRecoveryKey(memberId, RecoveryUser.hash(rawUser))
+        // The name and the recovery user have to stay different from each other.
+        if (member.recoveryKey.isNotEmpty() && RecoveryUser.hash(name) == member.recoveryKey) {
+            return AuthError.NAME_SAME_AS_RECOVERY_USER
+        }
+        val clash = memberDao.findByName(member.householdId, name.lowercase())
+        if (clash != null && clash.id != memberId) return AuthError.NAME_TAKEN
+        return try {
+            memberDao.updateName(memberId, name, name.lowercase())
+            null
+        } catch (e: SQLiteConstraintException) {
+            AuthError.NAME_TAKEN
+        }
+    }
+
+    /**
+     * Sets or changes the recovery user. When one already exists the current one must be typed
+     * correctly, and the new one has to be typed twice. Returns the error, or null on success.
+     */
+    suspend fun changeRecoveryUser(
+        memberId: String,
+        currentUser: String,
+        newUser: String,
+        confirmUser: String,
+    ): AuthError? {
+        val member = memberDao.findById(memberId) ?: return AuthError.MEMBER_NOT_FOUND
+        val hasCurrent = member.recoveryKey.isNotEmpty()
+        if (hasCurrent && RecoveryUser.hash(currentUser) != member.recoveryKey) return AuthError.RECOVERY_CURRENT_WRONG
+        validateRecoveryUser(member.name, newUser)?.let { return it }
+        if (RecoveryUser.normalize(newUser) != RecoveryUser.normalize(confirmUser)) return AuthError.RECOVERY_MISMATCH
+        if (hasCurrent && RecoveryUser.hash(newUser) == member.recoveryKey) return AuthError.RECOVERY_SAME_AS_CURRENT
+        memberDao.setRecoveryKey(memberId, RecoveryUser.hash(newUser))
         return null
     }
 
