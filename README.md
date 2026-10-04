@@ -99,9 +99,9 @@ app/src/main/java/com/hogargo/app/
 
 | Integrante | Rama | Responsabilidad |
 |---|---|---|
-| **Nelson López** | `Nelson` | Finanzas, Mascota, Calendario, integración, navegación y animaciones |
-| **Jhonatan Palacios** | `JhonatanPG` | Tareas, Inicio, racha y notificaciones, consejos en línea (API) |
-| **Isabella Romero** | `create-join-home` | Inicio de sesión y creación del hogar |
+| **Nelson Rodrigo López Vidales** | `Nelson` | Finanzas, Mascota, Calendario, integración, navegación y animaciones |
+| **Jhonatan Palacios Gomez** | `JhonatanPG` | Tareas, Inicio, racha y notificaciones, consejos en línea (API) |
+| **Dana Isabella Romero Núñez** | `create-join-home` | Inicio de sesión y creación del hogar |
 
 ## ⚠️ Limitaciones conocidas
 

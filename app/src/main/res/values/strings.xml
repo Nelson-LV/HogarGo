@@ -212,11 +212,11 @@
     <string name="about_feature_calendar_body">Organiza eventos y no olvides las fechas de pago de tus cuentas.</string>
     <string name="about_credits_title">Créditos</string>
     <string name="about_credits_intro">Proyecto desarrollado por los estudiantes:</string>
-    <string name="about_student_nelson">Nelson López</string>
+    <string name="about_student_nelson">Nelson Rodrigo López Vidales</string>
     <string name="about_student_nelson_role">Finanzas, Mascota y Calendario</string>
-    <string name="about_student_jhonatan">Jhonatan Palacios</string>
+    <string name="about_student_jhonatan">Jhonatan Palacios Gomez</string>
     <string name="about_student_jhonatan_role">Tareas, Inicio, notificaciones y consejos en línea (API)</string>
-    <string name="about_student_isabella">Isabella Romero</string>
+    <string name="about_student_isabella">Dana Isabella Romero Núñez</string>
     <string name="about_student_isabella_role">Inicio de sesión y creación del hogar</string>
     <string name="about_footer">Hecho con ❤️ para el curso de Aplicaciones Móviles.</string>
 
