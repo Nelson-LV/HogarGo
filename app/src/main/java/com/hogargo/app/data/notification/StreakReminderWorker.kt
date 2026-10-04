@@ -6,13 +6,11 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.hogargo.app.data.StreakCalculator
 import com.hogargo.app.data.household.SessionStore
 import com.hogargo.app.data.local.HogarGoDatabase
 import kotlinx.coroutines.flow.first
-import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 /**
@@ -28,17 +26,9 @@ class StreakReminderWorker(
         // No one signed in on this device -> nothing to remind about.
         val householdId = SessionStore(applicationContext).householdId ?: return Result.success()
         val tasks = HogarGoDatabase.getInstance(applicationContext).taskDao().getAllTasks(householdId).first()
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val today = dateFormat.format(Date())
-        val yesterday = dateFormat.format(
-            Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }.time,
-        )
-
-        val completedDates = tasks.filter { it.completed }.mapNotNull { it.completedDate }.toSet()
-        // Same rule as AppViewModel: streak is alive only if the last completion was today or yesterday.
-        val streakAlive = completedDates.any { it == yesterday }
-        if (streakAlive && today !in completedDates) {
-            StreakNotificationHelper.showStreakWarningNotification(applicationContext, completedDates.size)
+        val completedDates = tasks.filter { it.completed }.mapNotNull { it.completedDate }
+        if (StreakCalculator.isAtRisk(completedDates)) {
+            StreakNotificationHelper.showStreakWarningNotification(applicationContext, StreakCalculator.streakDays(completedDates))
         }
         return Result.success()
     }

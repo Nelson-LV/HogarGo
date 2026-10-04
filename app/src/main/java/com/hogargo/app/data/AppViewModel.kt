@@ -10,7 +10,6 @@ import com.hogargo.app.data.local.TaskEntity
 import com.hogargo.app.data.local.toHouseTask
 import com.hogargo.app.data.local.toTaskEntity
 import com.hogargo.app.data.network.AdviceRepository
-import com.hogargo.app.data.notification.StreakNotificationHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,16 +17,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 import java.util.UUID
 
 data class AppUiState(
     val tasks: List<HouseTask> = emptyList(),
     val nextTask: HouseTask? = null,
-    val streakDays: Int = 4,
+    val streakDays: Int = 0,
     val dailyAdvice: String = "Organizar tu hogar un poco cada día hace que la convivencia sea más feliz.",
     val isLoadingAdvice: Boolean = false,
     /** Everyone in the current household (including [currentMember]). */
@@ -86,7 +81,7 @@ class AppViewModel(
         AppUiState(
             tasks = tasksList,
             nextTask = data.next?.toHouseTask(),
-            streakDays = calculateStreakDays(tasksList),
+            streakDays = StreakCalculator.streakDays(tasksList.filter { it.completed }.mapNotNull { it.completedDate }),
             dailyAdvice = advice,
             isLoadingAdvice = isLoading,
             members = data.members,
@@ -150,49 +145,13 @@ class AppViewModel(
         }
     }
 
-    private fun calculateStreakDays(tasks: List<HouseTask>): Int {
-        val completedDates = tasks
-            .filter { it.completed && !it.completedDate.isNullOrBlank() }
-            .mapNotNull { it.completedDate }
-            .sorted()
-
-        if (completedDates.isEmpty()) return 0
-
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val cal = Calendar.getInstance()
-        val todayStr = dateFormat.format(cal.time)
-
-        cal.add(Calendar.DAY_OF_YEAR, -1)
-        val resolverStr = dateFormat.format(cal.time)
-
-        val lastCompletedDate = completedDates.last()
-
-        if (lastCompletedDate != todayStr && lastCompletedDate != resolverStr) {
-            return 0
-        }
-
-        val uniqueCompletedDays = completedDates.toSet()
-        return uniqueCompletedDays.size
-    }
-
-    fun triggerStreakWarningNotification() {
-        val currentState = uiState.value
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val todayStr = dateFormat.format(Date())
-        val hasCompletedToday = currentState.tasks.any { it.completed && it.completedDate == todayStr }
-
-        if (!hasCompletedToday && currentState.streakDays > 0) {
-            StreakNotificationHelper.showStreakWarningNotification(getApplication(), currentState.streakDays)
-        }
-    }
-
     fun toggleTaskCompleted(taskId: String) {
         viewModelScope.launch {
             val task = taskDao.getTaskById(householdId, taskId)
             if (task != null) {
                 val newCompleted = !task.completed
                 val completedDate = if (newCompleted) {
-                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                    StreakCalculator.today()
                 } else null
                 taskDao.updateTaskCompleted(householdId, taskId, newCompleted, completedDate)
             }

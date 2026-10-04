@@ -532,7 +532,7 @@ private fun StreakChip(streakDays: Int) {
                 style = MaterialTheme.typography.labelLarge,
             )
             Text(
-                text = stringResource(R.string.home_streak_subtitle, streakDays, 7),
+                text = stringResource(R.string.home_streak_subtitle, streakDays, (streakDays / 7 + 1) * 7),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

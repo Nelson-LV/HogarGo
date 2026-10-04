@@ -14,15 +14,22 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.YearMonth
 
 data class FinanceUiState(
     val expenses: List<ExpenseEntity> = emptyList(),
     val savingsGoals: List<SavingsGoalEntity> = emptyList(),
 ) {
-    val totalSpent: Double get() = expenses.sumOf { it.amount }
-    val averageExpense: Double get() = if (expenses.isEmpty()) 0.0 else totalSpent / expenses.size
+    /** The "Este Mes" card, average and breakdown only count the current month; the list shows everything. */
+    val monthExpenses: List<ExpenseEntity>
+        get() {
+            val month = YearMonth.now()
+            return expenses.filter { YearMonth.from(it.date) == month }
+        }
+    val totalSpent: Double get() = monthExpenses.sumOf { it.amount }
+    val averageExpense: Double get() = if (monthExpenses.isEmpty()) 0.0 else totalSpent / monthExpenses.size
     val breakdown: List<Pair<ExpenseCategory, Double>>
-        get() = expenses
+        get() = monthExpenses
             .groupBy { it.category }
             .mapValues { (_, items) -> items.sumOf { it.amount } }
             .toList()
