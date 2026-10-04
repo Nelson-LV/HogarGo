@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,10 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AutoAwesome
@@ -99,7 +98,6 @@ fun WelcomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -127,7 +125,7 @@ fun WelcomeScreen(
             modifier = Modifier.padding(top = 8.dp),
         )
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(12.dp))
 
         // Speech bubble
         Row(
@@ -147,40 +145,45 @@ fun WelcomeScreen(
             )
         }
 
-        Spacer(Modifier.height(14.dp))
-
-        // Zori
-        Box(modifier = Modifier.size(190.dp)) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(CircleShape)
-                    .background(BrandOrangeContainer.copy(alpha = 0.6f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.img_zori_fox),
-                    contentDescription = null,
-                    contentScale = ContentScale.Fit,
+        // Zori takes whatever vertical space is left, so the screen never needs to scroll.
+        BoxWithConstraints(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            val zoriSize = minOf(maxHeight, 190.dp)
+            Box(modifier = Modifier.size(zoriSize)) {
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(18.dp),
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 6.dp, bottom = 6.dp)
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(BrandBrownStrong),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(Icons.Filled.AutoAwesome, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                        .clip(CircleShape)
+                        .background(BrandOrangeContainer.copy(alpha = 0.6f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.img_zori_fox),
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(zoriSize * 0.1f),
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 6.dp, bottom = 6.dp)
+                        .size(zoriSize * 0.19f)
+                        .clip(CircleShape)
+                        .background(BrandBrownStrong),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Filled.AutoAwesome, contentDescription = null, tint = Color.White, modifier = Modifier.size(zoriSize * 0.09f))
+                }
             }
         }
-
-        Spacer(Modifier.height(20.dp))
 
         Text(
             text = stringResource(R.string.welcome_title),
@@ -193,10 +196,10 @@ fun WelcomeScreen(
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = Modifier.padding(top = 4.dp),
         )
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(16.dp))
 
         ChoiceCard(
             title = stringResource(R.string.welcome_create_title),
@@ -205,7 +208,7 @@ fun WelcomeScreen(
             primary = true,
             onClick = onCreateHousehold,
         )
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(10.dp))
         ChoiceCard(
             title = stringResource(R.string.welcome_join_title),
             description = stringResource(R.string.welcome_join_desc),
@@ -214,7 +217,7 @@ fun WelcomeScreen(
             onClick = onJoinHousehold,
         )
 
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(12.dp))
 
         Row(
             modifier = Modifier
@@ -234,14 +237,13 @@ fun WelcomeScreen(
             FeatureChip(Icons.Filled.Savings, stringResource(R.string.welcome_chip_finance))
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(8.dp))
 
         BottomLinkText(
             prefix = stringResource(R.string.welcome_already_member),
             link = stringResource(R.string.welcome_sign_in),
             onClick = { showSignIn = true },
         )
-        Spacer(Modifier.height(12.dp))
     }
 }
 
