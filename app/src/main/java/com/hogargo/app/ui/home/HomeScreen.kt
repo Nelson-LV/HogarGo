@@ -84,6 +84,7 @@ import com.hogargo.app.data.local.SavingsGoalEntity
 import com.hogargo.app.data.HouseTask
 import com.hogargo.app.data.getDisplayTitle
 import com.hogargo.app.data.local.ExpenseCategory
+import com.hogargo.app.ui.calendar.AddEventDialog
 import com.hogargo.app.ui.calendar.CalendarViewModel
 import com.hogargo.app.ui.finance.AddExpenseDialog
 import com.hogargo.app.ui.finance.FinanceViewModel
@@ -127,10 +128,11 @@ fun HomeScreen(
     var showMoreBottomSheet by rememberSaveable { mutableStateOf(false) }
 
     if (showNewEventDialog) {
-        NewEventDialog(
+        AddEventDialog(
             onDismiss = { showNewEventDialog = false },
-            onSave = { title, dateLabel, timeLabel ->
-                calendarViewModel.addEvent(title, dateLabel, timeLabel)
+            onConfirm = { title, date, time ->
+                calendarViewModel.addEvent(title, date, time)
+                showNewEventDialog = false
             },
         )
     }
@@ -374,138 +376,6 @@ private fun HouseholdMembersDialog(members: List<MemberEntity>, onDismiss: () ->
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text(stringResource(android.R.string.ok))
-            }
-        },
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun NewEventDialog(
-    onDismiss: () -> Unit,
-    onSave: (title: String, dateLabel: String, timeLabel: String?) -> Unit,
-) {
-    val context = LocalContext.current
-    var eventTitle by rememberSaveable { mutableStateOf("") }
-    var eventDateLabel by rememberSaveable { mutableStateOf(context.getString(R.string.new_task_today)) }
-    var eventTimeLabel by rememberSaveable { mutableStateOf("10:00") }
-
-    var showDatePicker by rememberSaveable { mutableStateOf(false) }
-    var showTimePicker by rememberSaveable { mutableStateOf(false) }
-
-    if (showDatePicker) {
-        val datePickerState = rememberDatePickerState()
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        val cal = Calendar.getInstance().apply {
-                            timeInMillis = millis + TimeZone.getDefault().getOffset(millis)
-                        }
-                        val today = Calendar.getInstance()
-                        val isToday = (cal[Calendar.YEAR] == today[Calendar.YEAR]) && (cal[Calendar.DAY_OF_YEAR] == today[Calendar.DAY_OF_YEAR])
-                        eventDateLabel = if (isToday) context.getString(R.string.new_task_today) else SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(cal.time)
-                    }
-                    showDatePicker = false
-                }) {
-                    Text(stringResource(android.R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text(stringResource(android.R.string.cancel))
-                }
-            },
-        ) {
-            DatePicker(state = datePickerState)
-        }
-    }
-
-    if (showTimePicker) {
-        val timePickerState = rememberTimePickerState(initialHour = 10, initialMinute = 0, is24Hour = true)
-        AlertDialog(
-            onDismissRequest = { showTimePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    eventTimeLabel = String.format(Locale.getDefault(), "%02d:%02d", timePickerState.hour, timePickerState.minute)
-                    showTimePicker = false
-                }) {
-                    Text(stringResource(android.R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showTimePicker = false }) {
-                    Text(stringResource(android.R.string.cancel))
-                }
-            },
-            text = {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    TimePicker(state = timePickerState)
-                }
-            },
-        )
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.home_quick_event), style = MaterialTheme.typography.titleLarge) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                OutlinedTextField(
-                    value = eventTitle,
-                    onValueChange = { eventTitle = it },
-                    label = { Text("Nombre del evento") },
-                    placeholder = { Text("Ej. Cumpleaños de Leo, Cita médica") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable { showDatePicker = true },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-                    ) {
-                        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Icon(Icons.Outlined.CalendarToday, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
-                            Text(eventDateLabel, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
-                        }
-                    }
-                    Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable { showTimePicker = true },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-                    ) {
-                        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Icon(Icons.Outlined.Schedule, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
-                            Text(eventTimeLabel, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    if (eventTitle.isNotBlank()) {
-                        onSave(eventTitle.trim(), eventDateLabel, eventTimeLabel)
-                        onDismiss()
-                    }
-                },
-                enabled = eventTitle.isNotBlank(),
-                shape = RoundedCornerShape(12.dp),
-            ) {
-                Text(stringResource(R.string.new_task_create))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(android.R.string.cancel))
             }
         },
     )

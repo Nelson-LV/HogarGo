@@ -107,6 +107,17 @@
     <string name="calendar_subtitle">A warm summary of your month\'s rhythm.</string>
     <string name="calendar_upcoming_tasks">Upcoming Events</string>
     <string name="calendar_events_empty">No events scheduled.</string>
+    <string name="calendar_add_event">New Event</string>
+    <string name="calendar_event_name_label">Event name</string>
+    <string name="calendar_event_name_hint">E.g. Leo\'s birthday, Doctor appointment</string>
+    <string name="calendar_day_events">Events</string>
+    <string name="calendar_day_bills">Bills due</string>
+    <string name="calendar_day_tasks">Completed tasks</string>
+    <string name="calendar_day_empty">Nothing is scheduled for this day.</string>
+    <string name="calendar_delete_event_cd">Delete event</string>
+    <string name="calendar_legend_events">Events</string>
+    <string name="calendar_legend_bills">Bills</string>
+    <string name="calendar_legend_tasks">Tasks</string>
     <string name="calendar_bills_due">Bills Due</string>
     <string name="calendar_due_today">Due Today!</string>
     <string name="calendar_month_year">%1$s %2$d</string>

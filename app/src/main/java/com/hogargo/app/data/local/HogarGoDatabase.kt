@@ -25,7 +25,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         HouseholdEntity::class,
         MemberEntity::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -62,6 +62,26 @@ abstract class HogarGoDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE events ADD COLUMN date INTEGER")
+                // Old events stored their date as text; recover the ones written as dd/MM/yyyy.
+                val pattern = Regex("^(\\d{2})/(\\d{2})/(\\d{4})")
+                val rows = mutableListOf<Triple<String, String, Long>>()
+                db.query("SELECT householdId, id, dateLabel FROM events").use { cursor ->
+                    while (cursor.moveToNext()) {
+                        val match = pattern.find(cursor.getString(2)) ?: continue
+                        val (d, m, y) = match.destructured
+                        val epochDay = runCatching { java.time.LocalDate.of(y.toInt(), m.toInt(), d.toInt()).toEpochDay() }.getOrNull() ?: continue
+                        rows += Triple(cursor.getString(0), cursor.getString(1), epochDay)
+                    }
+                }
+                rows.forEach { (household, id, epochDay) ->
+                    db.execSQL("UPDATE events SET date = ? WHERE householdId = ? AND id = ?", arrayOf<Any?>(epochDay, household, id))
+                }
+            }
+        }
+
         @Volatile
         private var instance: HogarGoDatabase? = null
 
@@ -72,7 +92,7 @@ abstract class HogarGoDatabase : RoomDatabase() {
                     HogarGoDatabase::class.java,
                     "hogargo.db",
                 )
-                    .addMigrations(MIGRATION_4_5, MIGRATION_6_7, MIGRATION_7_8)
+                    .addMigrations(MIGRATION_4_5, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
                     // Pre-release schema: destroy & recreate on bump instead of writing migrations.
                     .fallbackToDestructiveMigration(dropAllTables = true)
                     .build().also { instance = it }

@@ -27,5 +27,5 @@ class HogarGoApplication : Application() {
         PetRepository(householdId, database.petStateDao(), database.wardrobeItemDao(), database.taskDao())
 
     fun calendarRepository(householdId: String) =
-        CalendarRepository(householdId, database.billDao(), database.eventDao())
+        CalendarRepository(householdId, database.billDao(), database.eventDao(), database.taskDao())
 }
