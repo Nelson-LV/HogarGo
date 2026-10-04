@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Checklist
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Pets
 import androidx.compose.material.icons.outlined.Savings
 import androidx.compose.material3.Card
@@ -40,6 +41,7 @@ private data class Feature(val icon: ImageVector, val titleRes: Int, val bodyRes
 private data class Student(val nameRes: Int, val roleRes: Int)
 
 private val Features = listOf(
+    Feature(Icons.Outlined.Home, R.string.about_feature_household_title, R.string.about_feature_household_body),
     Feature(Icons.Outlined.Checklist, R.string.about_feature_tasks_title, R.string.about_feature_tasks_body),
     Feature(Icons.Outlined.Savings, R.string.about_feature_finance_title, R.string.about_feature_finance_body),
     Feature(Icons.Outlined.Pets, R.string.about_feature_pet_title, R.string.about_feature_pet_body),
@@ -49,6 +51,7 @@ private val Features = listOf(
 private val Students = listOf(
     Student(R.string.about_student_nelson, R.string.about_student_nelson_role),
     Student(R.string.about_student_jhonatan, R.string.about_student_jhonatan_role),
+    Student(R.string.about_student_isabella, R.string.about_student_isabella_role),
 )
 
 @Composable

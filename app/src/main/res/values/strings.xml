@@ -187,8 +187,10 @@
     <string name="more_about_subtitle">Descripción de la app y créditos del equipo</string>
     <string name="about_title">Acerca de</string>
     <string name="about_version">Versión %1$s</string>
-    <string name="about_description">HogarGo convierte las tareas del hogar y las finanzas familiares en un juego en equipo. Cada integrante suma tareas completadas, cuida a Zori, el zorro mascota, y juntos alcanzan sus metas de ahorro.</string>
+    <string name="about_description">HogarGo convierte las tareas del hogar y las finanzas familiares en un juego en equipo. Cada familia tiene su propio hogar con un código de invitación: sus integrantes reparten y completan tareas, cuidan a Zori, el zorro mascota, y juntos alcanzan sus metas de ahorro.</string>
     <string name="about_features_title">¿Qué puedes hacer?</string>
+    <string name="about_feature_household_title">Tu hogar</string>
+    <string name="about_feature_household_body">Crea un hogar o únete con un código; el administrador acepta a los nuevos integrantes.</string>
     <string name="about_feature_tasks_title">Tareas y racha</string>
     <string name="about_feature_tasks_body">Reparte tareas, complétalas para ganar monedas y mantén tu racha diaria.</string>
     <string name="about_feature_finance_title">Finanzas</string>
@@ -202,7 +204,9 @@
     <string name="about_student_nelson">Nelson López</string>
     <string name="about_student_nelson_role">Finanzas, Mascota y Calendario</string>
     <string name="about_student_jhonatan">Jhonatan Palacios</string>
-    <string name="about_student_jhonatan_role">Tareas, Inicio y notificaciones</string>
+    <string name="about_student_jhonatan_role">Tareas, Inicio, notificaciones y consejos en línea (API)</string>
+    <string name="about_student_isabella">Isabella Romero</string>
+    <string name="about_student_isabella_role">Inicio de sesión y creación del hogar</string>
     <string name="about_footer">Hecho con ❤️ para el curso de Aplicaciones Móviles.</string>
 
     <!-- Welcome / auth -->
